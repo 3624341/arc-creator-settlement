@@ -1,0 +1,47 @@
+{
+  "name": "arc-creator-settlement",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "circle:wallet": "tsx scripts/circle-create-deployer.ts",
+    "circle:deploy": "hardhat compile && tsx scripts/circle-deploy-factory.ts",
+    "deploy:arc:local-key": "hardhat run scripts/deploy.ts --network arcTestnet",
+    "demo:seed": "tsx scripts/seed-demo.ts",
+    "circle:entity:generate": "tsx scripts/circle-entity.ts generate",
+    "circle:entity:register": "tsx scripts/circle-entity.ts register"
+  },
+  "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "latest",
+    "@circle-fin/smart-contract-platform": "latest",
+    "@circle-fin/w3s-pw-web-sdk": "latest",
+    "@supabase/supabase-js": "^2.57.0",
+    "@tanstack/react-query": "^5.85.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.541.0",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.1",
+    "viem": "^2.36.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "autoprefixer": "^10.4.21",
+    "dotenv": "^16.6.1",
+    "hardhat": "^2.26.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
