@@ -1,5 +1,7 @@
 # Arc Creator Settlement v0.3
 
+Production deployments are built from the main branch through Vercel.
+
 **Verifiable USDC milestone settlement on Arc for creators, freelancers, and marketplaces.**
 
 Arc Creator Settlement turns a project agreement into a USDC-funded escrow. A creator submits a milestone, the client releases payment, and v0.3 turns that release transaction into a public onchain receipt that anyone can verify without connecting a wallet.
