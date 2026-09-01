@@ -57,6 +57,16 @@ export const factoryAbi = [
 
 export const escrowAbi = [
   {
+    type: "event",
+    name: "PaymentReleased",
+    inputs: [
+      { indexed: true, name: "milestoneId", type: "uint256" },
+      { indexed: true, name: "creator", type: "address" },
+      { indexed: false, name: "amount", type: "uint256" }
+    ],
+    anonymous: false
+  },
+  {
     type: "function",
     name: "deposit",
     inputs: [],
