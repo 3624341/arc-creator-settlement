@@ -7,9 +7,9 @@ export default function Home() {
   return (
     <Shell>
       <section className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="py-10">
+        <div className="min-w-0 py-10">
           <p className="mb-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-bold text-arc-purple shadow-sm">v0.3 · Live verification on Arc Testnet</p>
-          <h1 className="max-w-4xl text-6xl font-black leading-[0.95] tracking-tight md:text-7xl">
+          <h1 className="max-w-4xl break-words text-5xl font-black leading-[0.95] tracking-tight sm:text-6xl md:text-7xl">
             Programmable USDC settlement for creators and marketplaces.
           </h1>
           <p className="mt-7 max-w-2xl text-xl leading-8 text-arc-muted">
