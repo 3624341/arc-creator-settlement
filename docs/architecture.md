@@ -23,7 +23,19 @@ Arc Testnet
               │ Release USDC by approved milestone
               ▼
 Creator Wallet
+      │
+      │ PaymentReleased transaction hash
+      ▼
+Public Receipt Verifier ─── Arc RPC + escrow state at confirmed block
+      │
+      └── Optional verified Supabase index
 ```
+
+## Receipt trust model
+
+The receipt URL contains only an Arc transaction hash. The server requires a successful transaction, exactly one decodable `PaymentReleased` event, matching creator and amount values, and a released milestone in the emitting escrow at the confirmed block. Project and milestone labels are read from that escrow rather than accepted from URL parameters or browser storage.
+
+The optional Supabase table is a discovery index, not the source of truth. Its write path re-runs the same Arc verification before storing a receipt, while individual receipt pages continue to work without Supabase.
 
 ## Circle and Arc alignment
 
