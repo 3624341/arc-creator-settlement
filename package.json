@@ -8,7 +8,7 @@
     "start": "next start",
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "test:web": "tsx --test --test-isolation=none \"web-test/**/*.test.ts\" \"web-test/**/*.test.tsx\"",
+    "test:web": "tsx --tsconfig tsconfig.web-test.json --test --test-isolation=none \"web-test/**/*.test.ts\" \"web-test/**/*.test.tsx\"",
     "circle:wallet": "tsx scripts/circle-create-deployer.ts",
     "circle:deploy": "hardhat compile && tsx scripts/circle-deploy-factory.ts",
     "deploy:arc:local-key": "hardhat run scripts/deploy.ts --network arcTestnet",
