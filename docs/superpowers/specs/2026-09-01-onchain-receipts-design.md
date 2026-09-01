@@ -4,6 +4,8 @@
 
 Turn every successful milestone release into a polished, public, independently verifiable receipt. A reviewer must be able to open a receipt without connecting a wallet and confirm the payment against Arc Testnet.
 
+The immediate business objective is to strengthen the owner's Arc Discord/community application. The deployed v0.3 product, a real receipt URL, and its matching ArcScan transaction should serve as concise proof that the applicant is an active Arc builder and product owner rather than only a translator or marketer.
+
 ## Product Positioning
 
 Arc Creator Settlement is a milestone settlement product, not a generic block explorer. The v0.3 experience should make one product story obvious:
@@ -137,6 +139,7 @@ Use test-driven development for every new behavior.
 ## Success Criteria
 
 - A real `approveAndRelease` transaction produces a working public receipt URL.
+- The Discord/community application can link directly to one deployed product, one receipt, one ArcScan transaction, and one public repository without relying on unverified claims.
 - The receipt is readable without a wallet or login.
 - Every displayed payment fact is derived from or checked against Arc onchain data.
 - ArcScan opens the exact transaction shown on the receipt.
