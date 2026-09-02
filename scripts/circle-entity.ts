@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { generateEntitySecret, registerEntitySecretCiphertext } from "@circle-fin/developer-controlled-wallets";
+import { ensureRecoveryDirectory } from "../lib/circle-recovery";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -20,10 +21,11 @@ async function main() {
     const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
     if (!apiKey || !entitySecret) throw new Error("Set CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET in .env.local first.");
 
+    const recoveryFileDownloadPath = ensureRecoveryDirectory("./recovery");
     const response = await registerEntitySecretCiphertext({
       apiKey,
       entitySecret,
-      recoveryFileDownloadPath: "./recovery"
+      recoveryFileDownloadPath
     });
     console.log("\nEntity Secret registered with Circle.");
     console.log("Recovery file response:", response.data?.recoveryFile ?? response.data);

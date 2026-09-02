@@ -16,6 +16,18 @@ Arc Creator Settlement turns a project agreement into a USDC-funded escrow. A cr
 
 The transaction hash is only the lookup key. Amount, creator, milestone, and project data are reconstructed from Arc RPC and the escrow contract; query strings and browser storage are never treated as proof.
 
+## Live Arc Testnet proof
+
+- Product: https://arc-creator-settlement-v0-2.vercel.app
+- EscrowFactory: [`0x5b90cdfecf1c59596e0b6b9cae448a29c2774e32`](https://testnet.arcscan.app/address/0x5b90cdfecf1c59596e0b6b9cae448a29c2774e32)
+- Demo escrow: [`0x22De463e9969b8Cef07b151b9cB5D8c5A16D81Df`](https://testnet.arcscan.app/address/0x22De463e9969b8Cef07b151b9cB5D8c5A16D81Df)
+- Confirmed 0.25 USDC release: [`0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856`](https://testnet.arcscan.app/tx/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856)
+- Public receipt: https://arc-creator-settlement-v0-2.vercel.app/receipt/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+
+![Verified Arc Creator Settlement receipt](docs/evidence/arc-creator-settlement-receipt.png)
+
+The receipt and ArcScan independently agree on the transaction hash, block `59,934,707`, escrow, creator, and `0.25 USDC` transfer. The flow used Circle User-Controlled Wallets for approval, Circle Contracts for factory deployment, and Arc Testnet USDC for escrow funding and release.
+
 ## Settlement flow
 
 1. Create a project with a creator address and USDC milestones.
@@ -66,13 +78,9 @@ npm run test:web
 npm run build
 ```
 
-## Public evidence to add after deployment
+## Public evidence
 
-- Vercel production URL
-- Arc Testnet factory address
-- At least one complete milestone release transaction
-- Public receipt URL for that transaction
-- ArcScan links and a short demo video
+The Vercel product, factory, funded escrow, release transaction, receipt, and matching ArcScan capture are now public. A short demo video remains optional follow-up evidence.
 
 Use [`docs/discord-application-evidence.md`](docs/discord-application-evidence.md) and [`docs/submission-checklist.md`](docs/submission-checklist.md). Keep every undeployed item marked as pending; this repository intentionally does not fabricate usage, traction, or integrations.
 

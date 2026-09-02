@@ -1,0 +1,686 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/ojkukd",
+    "id": "ojkukd",
+    "slide": 1,
+    "layoutId": "38aac54f-f72e-4e5b-85ee-59c657b92e47",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "fd7a0130-7960-4f7b-b650-2e6a7f37e802",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "38aac54f-f72e-4e5b-85ee-59c657b92e47",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "fd7a0130-7960-4f7b-b650-2e6a7f37e802",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "fd7a0130-7960-4f7b-b650-2e6a7f37e802",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/svmtcfuh",
+      "id": "1",
+      "bbox": [
+        0,
+        0,
+        18,
+        720
+      ],
+      "geometry": "rect",
+      "fillColor": "#9CFF2E",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ruds3atw",
+      "id": "2",
+      "bbox": [
+        58,
+        58,
+        500,
+        28
+      ],
+      "geometry": "rect",
+      "text": "ARC · CIRCLE · USDC",
+      "textPreview": "ARC · CIRCLE · USDC",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "fontSize": 17,
+        "typeface": "+mn-lt",
+        "color": "#6E2AE6",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "ARC · CIRCLE · USDC"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "ARC · CIRCLE · USDC",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#6E2AE6",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "ARC · CIRCLE · USDC",
+              "fontSize": 17,
+              "color": "#6E2AE6",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6t4ra5cb",
+      "id": "3",
+      "bbox": [
+        58,
+        145,
+        760,
+        190
+      ],
+      "geometry": "rect",
+      "text": "Creator payments,\nsettled by milestone.",
+      "textPreview": "Creator payments, | settled by milestone.",
+      "resolvedFontSize": 64,
+      "resolvedTextStyle": {
+        "fontSize": 64,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Creator payments,"
+          },
+          {
+            "index": 2,
+            "text": "settled by milestone."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Creator payments,",
+          "resolvedTextStyle": {
+            "fontSize": 64,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Creator payments,",
+              "fontSize": 64,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "settled by milestone.",
+          "resolvedTextStyle": {
+            "fontSize": 64,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "settled by milestone.",
+              "fontSize": 64,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5sba10bq",
+      "id": "4",
+      "bbox": [
+        58,
+        380,
+        600,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Arc Creator Settlement v0.3",
+      "textPreview": "Arc Creator Settlement v0.3",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "fontSize": 25,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Arc Creator Settlement v0.3"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Arc Creator Settlement v0.3",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Arc Creator Settlement v0.3",
+              "fontSize": 25,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4r298vu5",
+      "id": "5",
+      "bbox": [
+        58,
+        430,
+        740,
+        95
+      ],
+      "geometry": "rect",
+      "text": "A working Arc Testnet escrow with Circle Wallets, programmable USDC releases, and public onchain receipts.",
+      "textPreview": "A working Arc Testnet escrow with Circle Wallets, programmable USDC releases, and public onchain receipts.",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#69645B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "A working Arc Testnet escrow with Circle Wallets, programmable USDC"
+          },
+          {
+            "index": 2,
+            "text": "releases, and public onchain receipts."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "A working Arc Testnet escrow with Circle Wallets, programmable USDC releases, and public onchain receipts.",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#69645B",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "A working Arc Testnet escrow with Circle Wallets, programmable USDC releases, and public onchain receipts.",
+              "fontSize": 24,
+              "color": "#69645B",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jqtszqtk",
+      "id": "6",
+      "bbox": [
+        860,
+        95,
+        330,
+        500
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#111111",
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ipkr6lcf",
+      "id": "7",
+      "bbox": [
+        900,
+        135,
+        240,
+        25
+      ],
+      "geometry": "rect",
+      "text": "LIVE PROOF",
+      "textPreview": "LIVE PROOF",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "fontSize": 16,
+        "typeface": "+mn-lt",
+        "color": "#32E6C3",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "LIVE PROOF"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "LIVE PROOF",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#32E6C3",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "LIVE PROOF",
+              "fontSize": 16,
+              "color": "#32E6C3",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pofad4ba",
+      "id": "8",
+      "bbox": [
+        900,
+        210,
+        250,
+        90
+      ],
+      "geometry": "rect",
+      "text": "0.25",
+      "textPreview": "0.25",
+      "resolvedFontSize": 70,
+      "resolvedTextStyle": {
+        "fontSize": 70,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "0.25"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "0.25",
+          "resolvedTextStyle": {
+            "fontSize": 70,
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "0.25",
+              "fontSize": 70,
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/on6tkzup",
+      "id": "9",
+      "bbox": [
+        900,
+        300,
+        240,
+        32
+      ],
+      "geometry": "rect",
+      "text": "USDC released",
+      "textPreview": "USDC released",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "USDC released"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "USDC released",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "USDC released",
+              "fontSize": 24,
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ep8zilo3",
+      "id": "10",
+      "bbox": [
+        900,
+        365,
+        240,
+        1
+      ],
+      "geometry": "rect",
+      "fillColor": "#444444",
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fqh0bq5o",
+      "id": "11",
+      "bbox": [
+        900,
+        405,
+        240,
+        120
+      ],
+      "geometry": "rect",
+      "text": "Arc Testnet\nBlock 59,934,707\nReceipt verified",
+      "textPreview": "Arc Testnet | Block 59,934,707 | Receipt verified",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "fontSize": 21,
+        "typeface": "+mn-lt",
+        "color": "#DDDDDD",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Arc Testnet"
+          },
+          {
+            "index": 2,
+            "text": "Block 59,934,707"
+          },
+          {
+            "index": 3,
+            "text": "Receipt verified"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Arc Testnet",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#DDDDDD",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Arc Testnet",
+              "fontSize": 21,
+              "color": "#DDDDDD",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "Block 59,934,707",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#DDDDDD",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Block 59,934,707",
+              "fontSize": 21,
+              "color": "#DDDDDD",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "Receipt verified",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#DDDDDD",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Receipt verified",
+              "fontSize": 21,
+              "color": "#DDDDDD",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

@@ -1,0 +1,23 @@
+Arc Creator Settlement version zero point three is a working milestone settlement application on Arc Testnet. It combines Circle user-owned wallets, programmable USDC escrow, and public onchain receipts.
+
+The flow begins when a client creates an agreement with a creator, a total value, and four milestones. The client funds the escrow with Arc USDC. The creator submits completed work, the client releases the milestone, and anyone can verify the result from a public receipt.
+
+The Creator Escrow Factory deploys an isolated escrow for each agreement. The current factory is deployed on Arc Testnet at the address shown here, and the creation event makes new escrows discoverable.
+
+Inside each escrow, submission and release are separate state transitions. Only the creator can submit. Only the client can release. A successful release transfers the exact milestone amount and emits a Payment Released event.
+
+For user authorization, the server creates a Circle contract-execution challenge for the Arc Testnet wallet. The browser completes that challenge through Circle's wallet SDK. API keys and the Entity Secret remain server-side and never enter the browser bundle.
+
+The Circle Wallet page reloads or creates a user-owned wallet and displays its Arc Testnet USDC balance. The demo wallet address ends in five five three four. The user keeps control of the keyshare without handling a seed phrase.
+
+This deployed demo escrow was funded with one USDC and splits the project into four milestones of zero point two five USDC each. The interface exposes approval, deposit, submit, and release operations for the complete settlement lifecycle.
+
+After the first milestone was submitted and released, the application generated this public read-only receipt. It reports the milestone, amount, creator, client, escrow, timestamp, block number, and transaction hash from confirmed Arc data.
+
+ArcScan independently confirms the same transaction. It succeeded at block fifty-nine million nine hundred thirty-four thousand seven hundred seven, transferring zero point two five USDC to the creator wallet.
+
+The receipt route fetches the transaction receipt, parses the Payment Released event, reads the escrow milestone state, and renders Paid only after those values agree. The URL itself is not treated as proof.
+
+The repository currently passes nineteen web tests and two Solidity tests. The live proof includes a one-USDC funded escrow and a confirmed zero-point-two-five-USDC milestone release. All deployment evidence and links are documented in GitHub.
+
+Arc Creator Settlement already demonstrates the end-to-end path on Arc Testnet. The next phase is to harden authorization and failure handling, add event observability and reusable marketplace APIs, prototype Circle Gateway funding, and complete a focused security review and controlled pilot.

@@ -1,6 +1,6 @@
 # Discord Application Evidence — Arc Creator Settlement v0.3
 
-Use this as the evidence sheet for an Arc Discord/community application. Replace only the `PENDING` values after they are public and verifiable.
+Use this as the evidence sheet for an Arc Discord/community application. Every onchain claim below is public and independently verifiable.
 
 ## Identity
 
@@ -8,7 +8,7 @@ Use this as the evidence sheet for an Arc Discord/community application. Replace
 - Project: Arc Creator Settlement
 - Version: v0.3
 - GitHub: https://github.com/3624341/arc-creator-settlement
-- Live product: `PENDING — Vercel deployment URL`
+- Live product: https://arc-creator-settlement-v0-2.vercel.app
 
 ## What was built
 
@@ -16,11 +16,13 @@ Arc Creator Settlement is a working Arc Testnet product for USDC-funded mileston
 
 ## Onchain evidence
 
-- Arc Testnet factory: `PENDING — deployed contract address`
-- Demo escrow: `PENDING — deployed escrow address`
-- Milestone release transaction: `PENDING — full 0x transaction hash`
-- Public receipt: `PENDING — /receipt/<transaction-hash> URL`
-- ArcScan transaction: `PENDING — https://testnet.arcscan.app/tx/<transaction-hash>`
+- Arc Testnet factory: https://testnet.arcscan.app/address/0x5b90cdfecf1c59596e0b6b9cae448a29c2774e32
+- Demo escrow: https://testnet.arcscan.app/address/0x22De463e9969b8Cef07b151b9cB5D8c5A16D81Df
+- Milestone release transaction: `0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856`
+- Public receipt: https://arc-creator-settlement-v0-2.vercel.app/receipt/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+- ArcScan transaction: https://testnet.arcscan.app/tx/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+- Confirmed block: `59,934,707`
+- Released amount: `0.25 USDC`
 
 ## Verification claims reviewers can test
 
@@ -41,4 +43,9 @@ Arc Creator Settlement is a working Arc Testnet product for USDC-funded mileston
 - ArcScan transaction with matching `PaymentReleased` values
 - GitHub tests that reject invalid or mismatched transactions
 
-Do not replace a `PENDING` field until the linked evidence exists. A precise testnet claim is stronger than an unverified production or traction claim.
+A precise testnet claim is stronger than an unverified production or traction claim. Keep future additions tied to public evidence.
+
+## Captures
+
+- [`docs/evidence/arc-creator-settlement-receipt.png`](evidence/arc-creator-settlement-receipt.png)
+- [`docs/evidence/arcscan-payment-release.png`](evidence/arcscan-payment-release.png)

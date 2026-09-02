@@ -1,0 +1,1106 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/gbyw3p",
+    "id": "gbyw3p",
+    "slide": 9,
+    "layoutId": "38aac54f-f72e-4e5b-85ee-59c657b92e47",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "fd7a0130-7960-4f7b-b650-2e6a7f37e802",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "38aac54f-f72e-4e5b-85ee-59c657b92e47",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "fd7a0130-7960-4f7b-b650-2e6a7f37e802",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "fd7a0130-7960-4f7b-b650-2e6a7f37e802",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0japgb2d",
+      "id": "1",
+      "bbox": [
+        58,
+        30,
+        700,
+        25
+      ],
+      "geometry": "rect",
+      "text": "ARC CREATOR SETTLEMENT · V0.3",
+      "textPreview": "ARC CREATOR SETTLEMENT · V0.3",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "fontSize": 15,
+        "typeface": "+mn-lt",
+        "color": "#69645B",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "ARC CREATOR SETTLEMENT · V0.3"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "ARC CREATOR SETTLEMENT · V0.3",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "color": "#69645B",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "ARC CREATOR SETTLEMENT · V0.3",
+              "fontSize": 15,
+              "color": "#69645B",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fi1on61s",
+      "id": "2",
+      "bbox": [
+        58,
+        68,
+        1164,
+        72
+      ],
+      "geometry": "rect",
+      "text": "The next grant phase converts proof into reusable infrastructure",
+      "textPreview": "The next grant phase converts proof into reusable infrastructure",
+      "resolvedFontSize": 42,
+      "resolvedTextStyle": {
+        "fontSize": 42,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The next grant phase converts proof into reusable infrastructure"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The next grant phase converts proof into reusable infrastructure",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The next grant phase converts proof into reusable infrastructure",
+              "fontSize": 42,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ehs7elk7",
+      "id": "3",
+      "bbox": [
+        58,
+        148,
+        1164,
+        2
+      ],
+      "geometry": "rect",
+      "fillColor": "#D7D2C9",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dgj6lgj2",
+      "id": "4",
+      "bbox": [
+        58,
+        205,
+        250,
+        28
+      ],
+      "geometry": "rect",
+      "text": "0–4 weeks",
+      "textPreview": "0–4 weeks",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "fontSize": 17,
+        "typeface": "+mn-lt",
+        "color": "#6E2AE6",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "0–4 weeks"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "0–4 weeks",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#6E2AE6",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "0–4 weeks",
+              "fontSize": 17,
+              "color": "#6E2AE6",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sfapcb2h",
+      "id": "5",
+      "bbox": [
+        58,
+        252,
+        250,
+        4
+      ],
+      "geometry": "rect",
+      "fillColor": "#6E2AE6",
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/re1oj6lw",
+      "id": "6",
+      "bbox": [
+        58,
+        285,
+        250,
+        55
+      ],
+      "geometry": "rect",
+      "text": "Harden settlement",
+      "textPreview": "Harden settlement",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Harden settlement"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Harden settlement",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Harden settlement",
+              "fontSize": 24,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qd87a1kb",
+      "id": "7",
+      "bbox": [
+        58,
+        360,
+        245,
+        120
+      ],
+      "geometry": "rect",
+      "text": "Role checks, state validation, failure UX, deterministic deployment.",
+      "textPreview": "Role checks, state validation, failure UX, deterministic deployment.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "fontSize": 19,
+        "typeface": "+mn-lt",
+        "color": "#69645B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Role checks, state validation,"
+          },
+          {
+            "index": 2,
+            "text": "failure UX, deterministic"
+          },
+          {
+            "index": 3,
+            "text": "deployment."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Role checks, state validation, failure UX, deterministic deployment.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "color": "#69645B",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Role checks, state validation, failure UX, deterministic deployment.",
+              "fontSize": 19,
+              "color": "#69645B",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/xc3qx0j6",
+      "id": "8",
+      "bbox": [
+        350,
+        205,
+        250,
+        28
+      ],
+      "geometry": "rect",
+      "text": "4–10 weeks",
+      "textPreview": "4–10 weeks",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "fontSize": 17,
+        "typeface": "+mn-lt",
+        "color": "#6E2AE6",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "4–10 weeks"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "4–10 weeks",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#6E2AE6",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "4–10 weeks",
+              "fontSize": 17,
+              "color": "#6E2AE6",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wbupov2l",
+      "id": "9",
+      "bbox": [
+        350,
+        252,
+        250,
+        4
+      ],
+      "geometry": "rect",
+      "fillColor": "#D7D2C9",
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/etw7apk3",
+      "id": "10",
+      "bbox": [
+        350,
+        285,
+        250,
+        55
+      ],
+      "geometry": "rect",
+      "text": "Add observability",
+      "textPreview": "Add observability",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Add observability"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Add observability",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Add observability",
+              "fontSize": 24,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fupoja1o",
+      "id": "11",
+      "bbox": [
+        350,
+        360,
+        245,
+        120
+      ],
+      "geometry": "rect",
+      "text": "Indexed events, operational views, reusable marketplace APIs.",
+      "textPreview": "Indexed events, operational views, reusable marketplace APIs.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "fontSize": 19,
+        "typeface": "+mn-lt",
+        "color": "#69645B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Indexed events, operational"
+          },
+          {
+            "index": 2,
+            "text": "views, reusable marketplace"
+          },
+          {
+            "index": 3,
+            "text": "APIs."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Indexed events, operational views, reusable marketplace APIs.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "color": "#69645B",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Indexed events, operational views, reusable marketplace APIs.",
+              "fontSize": 19,
+              "color": "#69645B",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0vypcf29",
+      "id": "12",
+      "bbox": [
+        642,
+        205,
+        250,
+        28
+      ],
+      "geometry": "rect",
+      "text": "10–18 weeks",
+      "textPreview": "10–18 weeks",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "fontSize": 17,
+        "typeface": "+mn-lt",
+        "color": "#6E2AE6",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "10–18 weeks"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "10–18 weeks",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#6E2AE6",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "10–18 weeks",
+              "fontSize": 17,
+              "color": "#6E2AE6",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1w76lkju",
+      "id": "13",
+      "bbox": [
+        642,
+        252,
+        250,
+        4
+      ],
+      "geometry": "rect",
+      "fillColor": "#D7D2C9",
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qpw765k7",
+      "id": "14",
+      "bbox": [
+        642,
+        285,
+        250,
+        55
+      ],
+      "geometry": "rect",
+      "text": "Prototype funding",
+      "textPreview": "Prototype funding",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Prototype funding"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Prototype funding",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Prototype funding",
+              "fontSize": 24,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rq5ofa1c",
+      "id": "15",
+      "bbox": [
+        642,
+        360,
+        245,
+        120
+      ],
+      "geometry": "rect",
+      "text": "Circle Gateway exploration for cross-chain USDC entry.",
+      "textPreview": "Circle Gateway exploration for cross-chain USDC entry.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "fontSize": 19,
+        "typeface": "+mn-lt",
+        "color": "#69645B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Circle Gateway exploration"
+          },
+          {
+            "index": 2,
+            "text": "for cross-chain USDC entry."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Circle Gateway exploration for cross-chain USDC entry.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "color": "#69645B",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Circle Gateway exploration for cross-chain USDC entry.",
+              "fontSize": 19,
+              "color": "#69645B",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/srep8f2x",
+      "id": "16",
+      "bbox": [
+        934,
+        205,
+        250,
+        28
+      ],
+      "geometry": "rect",
+      "text": "18–30 weeks",
+      "textPreview": "18–30 weeks",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "fontSize": 17,
+        "typeface": "+mn-lt",
+        "color": "#6E2AE6",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "18–30 weeks"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "18–30 weeks",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#6E2AE6",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "18–30 weeks",
+              "fontSize": 17,
+              "color": "#6E2AE6",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dsn6hkji",
+      "id": "17",
+      "bbox": [
+        934,
+        252,
+        250,
+        4
+      ],
+      "geometry": "rect",
+      "fillColor": "#D7D2C9",
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/al07i9kb",
+      "id": "18",
+      "bbox": [
+        934,
+        285,
+        250,
+        55
+      ],
+      "geometry": "rect",
+      "text": "Review + pilot",
+      "textPreview": "Review + pilot",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Review + pilot"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Review + pilot",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Review + pilot",
+              "fontSize": 24,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bm98ru1w",
+      "id": "19",
+      "bbox": [
+        934,
+        360,
+        245,
+        120
+      ],
+      "geometry": "rect",
+      "text": "Focused security review and controlled creator marketplace pilot.",
+      "textPreview": "Focused security review and controlled creator marketplace pilot.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "fontSize": 19,
+        "typeface": "+mn-lt",
+        "color": "#69645B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Focused security review and"
+          },
+          {
+            "index": 2,
+            "text": "controlled creator"
+          },
+          {
+            "index": 3,
+            "text": "marketplace pilot."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Focused security review and controlled creator marketplace pilot.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "color": "#69645B",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Focused security review and controlled creator marketplace pilot.",
+              "fontSize": 19,
+              "color": "#69645B",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/76143mh8",
+      "id": "20",
+      "bbox": [
+        58,
+        590,
+        1120,
+        42
+      ],
+      "geometry": "rect",
+      "text": "Outcome: a settlement primitive that marketplaces can integrate—not another closed payment ledger.",
+      "textPreview": "Outcome: a settlement primitive that marketplaces can integrate—not another closed payment ledger.",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "fontSize": 23,
+        "typeface": "+mn-lt",
+        "color": "#111111",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Outcome: a settlement primitive that marketplaces can integrate—not another closed payment ledger."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Outcome: a settlement primitive that marketplaces can integrate—not another closed payment ledger.",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "color": "#111111",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Outcome: a settlement primitive that marketplaces can integrate—not another closed payment ledger.",
+              "fontSize": 23,
+              "color": "#111111",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}
