@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
+import { ArrowUpRight } from "lucide-react";
 import { Shell } from "@/components/Shell";
 import { Button } from "@/components/Button";
 import { erc20Abi, escrowAbi } from "@/lib/abi";
@@ -9,6 +11,7 @@ import { ensureArcNetwork, getPublicClient, getWalletClient } from "@/lib/browse
 import { ARC_USDC_ADDRESS, txUrl } from "@/lib/arc";
 import { formatUsdc, parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
+import { findCircleReleaseTransaction, requestReceiptIndex, saveRecentReceipt } from "@/lib/receipts/client";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
 type WalletMode = "circle" | "browser";
@@ -22,6 +25,9 @@ export default function ContractDetailPage() {
   const [hash, setHash] = useState<string>();
   const [walletMode, setWalletMode] = useState<WalletMode>("circle");
   const [hasCircleSession, setHasCircleSession] = useState(false);
+  const [creatorAddress, setCreatorAddress] = useState<string>();
+  const [pendingRelease, setPendingRelease] = useState<number>();
+  const [receiptHashes, setReceiptHashes] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const circle = getCircleSession();
@@ -41,9 +47,10 @@ export default function ContractDetailPage() {
       try {
         const publicClient = getPublicClient();
         const escrow = address as `0x${string}`;
-        const [onchainTitle, count] = await Promise.all([
+        const [onchainTitle, count, onchainCreator] = await Promise.all([
           publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "title" }),
-          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "milestoneCount" })
+          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "milestoneCount" }),
+          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "creator" })
         ]);
         const rows: Milestone[] = [];
         for (let i = 0n; i < count; i++) {
@@ -57,6 +64,7 @@ export default function ContractDetailPage() {
         }
         if (!cancelled) {
           setTitle(onchainTitle);
+          setCreatorAddress(onchainCreator);
           setMilestones(rows);
         }
       } catch (error) {
@@ -130,18 +138,51 @@ export default function ContractDetailPage() {
   }
 
   async function approveRelease(index: number) {
+    setPendingRelease(index);
     try {
       if (!address) throw new Error("Escrow address missing.");
+      if (!creatorAddress) throw new Error("Creator address is still loading. Try again shortly.");
+      const publicClient = getPublicClient();
+      let transactionHash: `0x${string}` | undefined;
+
       if (walletMode === "circle") {
+        const fromBlock = await publicClient.getBlockNumber();
         await circleExec(address, "approveAndRelease(uint256)", [String(index)]);
+        setStatus("Circle approved the release. Locating the confirmed Arc transaction...");
+        transactionHash = await findCircleReleaseTransaction({
+          escrowAddress: address as `0x${string}`,
+          creatorAddress: creatorAddress as `0x${string}`,
+          milestoneIndex: index,
+          loadLogs: async () => publicClient.getLogs({
+            address: address as `0x${string}`,
+            fromBlock,
+            toBlock: "latest"
+          }) as never
+        });
+        if (!transactionHash) {
+          setStatus("Circle approved the release, but Arc is still indexing the receipt. Refresh shortly to confirm the milestone onchain.");
+          return;
+        }
       } else {
         const { walletClient, account, escrow } = await browserEscrow();
         setStatus(`Approving and releasing milestone ${index + 1}...`);
-        const tx = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "approveAndRelease", args: [BigInt(index)], account });
-        setHash(tx);
+        transactionHash = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "approveAndRelease", args: [BigInt(index)], account });
+        setHash(transactionHash);
+        setStatus("Release submitted. Waiting for Arc confirmation...");
+        const transaction = await publicClient.waitForTransactionReceipt({ hash: transactionHash });
+        if (transaction.status !== "success") throw new Error("Release transaction reverted on Arc.");
       }
+
+      saveRecentReceipt(transactionHash);
+      void requestReceiptIndex(transactionHash);
+      setReceiptHashes((previous) => ({ ...previous, [index]: transactionHash as string }));
       setMilestones((prev) => prev.map((m, i) => i === index ? { ...m, status: "Paid" } : m));
-    } catch (error) { setStatus(error instanceof Error ? error.message : "Release failed"); }
+      setStatus(`Milestone ${index + 1} paid. The public onchain receipt is ready.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Release failed");
+    } finally {
+      setPendingRelease(undefined);
+    }
   }
 
   return (
@@ -168,13 +209,20 @@ export default function ContractDetailPage() {
         <div className="mt-8 space-y-4">
           {milestones.length === 0 ? <div className="rounded-3xl border border-arc-line bg-white p-5 text-arc-muted">Onchain milestones will appear after the escrow address is confirmed.</div> : null}
           {milestones.map((m, index) => (
-            <div key={`${m.description}-${index}`} className="grid items-center gap-4 rounded-3xl border border-arc-line bg-white p-5 md:grid-cols-[1fr_8rem_8rem_16rem]">
+            <div key={`${m.description}-${index}`} className="grid items-center gap-4 rounded-3xl border border-arc-line bg-white p-5 md:grid-cols-[1fr_8rem_8rem_minmax(16rem,auto)]">
               <div><p className="font-black">{index + 1}. {m.description}</p><p className="text-sm text-arc-muted">Onchain milestone release</p></div>
               <p className="font-black">{m.amount} USDC</p>
               <span className="w-fit rounded-full bg-arc-bg px-3 py-1 text-xs font-black">{m.status}</span>
               <div className="flex gap-2">
                 <Button className="px-4 py-2" onClick={() => submitMilestone(index)}>Submit</Button>
-                <Button className="bg-arc-purple px-4 py-2" onClick={() => approveRelease(index)}>Release</Button>
+                <Button disabled={pendingRelease === index} className="bg-arc-purple px-4 py-2" onClick={() => approveRelease(index)}>
+                  {pendingRelease === index ? "Confirming…" : "Release"}
+                </Button>
+                {receiptHashes[index] ? (
+                  <Link href={`/receipt/${receiptHashes[index]}`} className="inline-flex items-center gap-1 rounded-full bg-arc-lime px-4 py-2 text-sm font-black text-arc-ink">
+                    Receipt <ArrowUpRight size={15} aria-hidden="true" />
+                  </Link>
+                ) : null}
               </div>
             </div>
           ))}

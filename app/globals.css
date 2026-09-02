@@ -9,6 +9,7 @@
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(85, 234, 212, 0.22), transparent 34rem),
     radial-gradient(circle at top right, rgba(107, 43, 217, 0.14), transparent 32rem),
@@ -16,3 +17,14 @@ body {
 }
 
 * { box-sizing: border-box; }
+
+:focus-visible {
+  outline: 3px solid rgba(107, 43, 217, 0.45);
+  outline-offset: 3px;
+}
+
+summary::-webkit-details-marker { display: none; }
+
+::selection {
+  background: rgba(85, 234, 212, 0.45);
+}

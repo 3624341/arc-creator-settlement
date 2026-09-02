@@ -1,44 +1,108 @@
-# Arc Creator Settlement
+# Arc Creator Settlement v0.3
 
-**Programmable USDC milestone settlement on Arc for global creators, freelancers, and marketplaces.**
+Programmable USDC milestone settlement for creators, freelancers, and marketplaces on Arc.
 
-Arc Creator Settlement is a Circle Grants–oriented working MVP codebase. A client funds a milestone agreement in USDC; a creator submits work; the client approves milestones; and the smart contract releases USDC on Arc.
+## Live verification
 
-## Implemented in this repository
+- Live app: https://arc-creator-settlement-v0-2.vercel.app
+- GitHub: https://github.com/3624341/arc-creator-settlement
+- Korean Arc build guide: https://github.com/3624341/arc-korean-build-guide
+- Public receipt: https://arc-creator-settlement-v0-2.vercel.app/receipt/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+- ArcScan transaction: https://testnet.arcscan.app/tx/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
 
-- Next.js / TypeScript product UI
-- Arc Testnet configuration and ArcScan links
-- `MilestoneEscrow.sol` and `EscrowFactory.sol`
-- USDC approve / deposit / milestone release flow
-- Circle **User-Controlled Wallets** PIN flow for ARC-TESTNET SCA wallets
-- Circle Wallet contract-execution challenges from the web app
-- Circle **Developer-Controlled Wallet** setup script for the deployer
-- Circle **Contracts** deployment script for custom EscrowFactory bytecode on ARC-TESTNET
-- Browser-wallet fallback for development/debugging
-- Hardhat tests and local MockUSDC
-- Optional Supabase schema
-- Grant application, roadmap, architecture, pitch deck outline, demo script, and checklist
+## Verified Arc Testnet deployment
 
-## Core flow
+- Network: Arc Testnet
+- Chain ID: 5042002
+- USDC: `0x3600000000000000000000000000000000000000`
+- EscrowFactory: `0x5b90cdfecf1c59596e0b6b9cae448a29c2774e32`
+- Demo escrow: `0x22De463e9969b8Cef07b151b9cB5D8c5A16D81Df`
+- Circle user wallet: `0x066c22504a9281811368A4BB942bAd72659C5534`
 
-1. Client creates/loads a Circle User-Controlled Wallet on Arc Testnet.
-2. Client calls `EscrowFactory.createEscrow()` through a Circle wallet authorization challenge.
-3. Client approves USDC and deposits the full milestone budget into the escrow contract.
-4. Creator submits milestone completion.
-5. Client approves the milestone.
-6. Escrow releases the milestone's USDC to the creator.
-7. Product surfaces onchain status and ArcScan links.
+## What is implemented
 
-## What still requires the applicant's credentials
+- CreatorEscrowFactory and isolated escrow contracts
+- Circle user-owned wallets on Arc Testnet
+- USDC escrow funding
+- Milestone submission and release
+- Public read-only settlement receipts
+- ArcScan verification links
+- Recovery-safe Circle Entity Secret workflow
+- Automated web and Solidity tests
 
-No secret credentials are bundled in this repository. Before a live Arc Testnet deployment, the applicant must configure:
+## Verified result
 
-- Circle Testnet API Key
-- Circle Entity Secret
-- Circle User-Controlled Wallet App ID
-- Arc Testnet faucet funding for the Circle deployer wallet
+The demo escrow was funded with 1 USDC.
 
-See **`SETUP_NEXT_STEPS_KR.md`** for the exact minimal steps. Never put API keys, Entity Secrets, private keys, or recovery files in chat or GitHub.
+The first 0.25 USDC milestone was submitted and released onchain.
+
+Payment release transaction:
+
+`0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856`
+
+## Testing
+
+- Web tests: 19 passing
+- Solidity tests: 2 passing
+- Production build: passing
+
+## Roadmap
+
+- Improve transaction pending and failure handling
+- Add event indexing and operational observability
+- Expose reusable marketplace APIs
+- Explore Circle Gateway for cross-chain USDC funding
+- Complete a focused security review and controlled pilot
+
+# Arc Creator Settlement v0.3
+
+**Verifiable USDC milestone settlement on Arc for creators, freelancers, and marketplaces.**
+
+Arc Creator Settlement turns a project agreement into a USDC-funded escrow. A creator submits a milestone, the client releases payment, and v0.3 turns that release transaction into a public onchain receipt that anyone can verify without connecting a wallet.
+
+## What v0.3 adds
+
+- Public receipt route: `/receipt/<Arc transaction hash>`
+- Independent verification of transaction success, `PaymentReleased` event data, and escrow state at the confirmed block
+- Human-readable project, milestone, creator, amount, block, timestamp, and ArcScan proof
+- Exact release-event tracking for browser wallets and Circle wallet challenges
+- Recent receipt history with local fallback
+- Optional Supabase index that accepts only receipts re-verified by the server
+- Responsive navigation, live Arc network status, loading/error states, and copyable receipt links
+
+The transaction hash is only the lookup key. Amount, creator, milestone, and project data are reconstructed from Arc RPC and the escrow contract; query strings and browser storage are never treated as proof.
+
+## Live Arc Testnet proof
+
+- Product: https://arc-creator-settlement-v0-2.vercel.app
+- EscrowFactory: [`0x5b90cdfecf1c59596e0b6b9cae448a29c2774e32`](https://testnet.arcscan.app/address/0x5b90cdfecf1c59596e0b6b9cae448a29c2774e32)
+- Demo escrow: [`0x22De463e9969b8Cef07b151b9cB5D8c5A16D81Df`](https://testnet.arcscan.app/address/0x22De463e9969b8Cef07b151b9cB5D8c5A16D81Df)
+- Confirmed 0.25 USDC release: [`0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856`](https://testnet.arcscan.app/tx/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856)
+- Public receipt: https://arc-creator-settlement-v0-2.vercel.app/receipt/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+
+![Verified Arc Creator Settlement receipt](docs/evidence/arc-creator-settlement-receipt.png)
+
+The receipt and ArcScan independently agree on the transaction hash, block `59,934,707`, escrow, creator, and `0.25 USDC` transfer. The flow used Circle User-Controlled Wallets for approval, Circle Contracts for factory deployment, and Arc Testnet USDC for escrow funding and release.
+
+## Settlement flow
+
+1. Create a project with a creator address and USDC milestones.
+2. Fund the escrow with USDC on Arc Testnet.
+3. The creator submits completed work.
+4. The client calls `approveAndRelease()`.
+5. The escrow transfers USDC and emits `PaymentReleased`.
+6. The app waits for the exact confirmed event, then creates a shareable receipt URL.
+7. Opening the receipt re-verifies the transaction and contract state against Arc.
+
+## Included stack
+
+- Next.js 15, React 19, TypeScript, Tailwind CSS
+- Solidity `MilestoneEscrow` and `EscrowFactory`
+- viem Arc RPC reads and browser-wallet transactions
+- Circle User-Controlled and Developer-Controlled Wallet flows
+- Circle Contracts deployment script
+- Optional Supabase receipt index with RLS
+- Hardhat contract tests and Node/React receipt tests
 
 ## Quick start
 
@@ -48,43 +112,40 @@ copy .env.example .env.local
 npm run dev
 ```
 
-On macOS/Linux use `cp .env.example .env.local`.
+On macOS/Linux, use `cp .env.example .env.local`. Open `http://localhost:3000`.
 
-Open `http://localhost:3000`.
+No API key, entity secret, private key, or recovery file is included. See [`SETUP_NEXT_STEPS_KR.md`](SETUP_NEXT_STEPS_KR.md) for the exact Arc/Circle setup and deployment sequence.
 
-## Circle / Arc deployment
+## Optional receipt index
 
-After Circle credentials are stored in `.env.local`:
+Receipts work without a database. To show a shared recent-receipts feed:
 
-```bash
-npm run circle:wallet
-```
+1. Run `supabase/schema.sql` in your Supabase project.
+2. Set `SUPABASE_URL` and server-only `SUPABASE_SECRET_KEY`.
+3. Never prefix the secret with `NEXT_PUBLIC_`.
 
-Fund the printed **public Arc Testnet deployer address** with faucet USDC, copy the returned Wallet Set / Wallet IDs into `.env.local`, then:
+The public can read indexed receipts, but only the server can write, and the server verifies Arc data before every upsert.
 
-```bash
-npm run circle:deploy
-```
-
-Put the deployed factory address into:
-
-```bash
-NEXT_PUBLIC_ESCROW_FACTORY_ADDRESS=0x...
-```
-
-## Tests
+## Verification
 
 ```bash
 npm run test
+npm run test:web
+npm run build
 ```
 
-## Grant materials
+## Public evidence
 
-- `docs/grant-application.md`
-- `docs/demo-video-script.md`
-- `docs/technical-roadmap.md`
+The Vercel product, factory, funded escrow, release transaction, receipt, and matching ArcScan capture are now public. A short demo video remains optional follow-up evidence.
+
+Use [`docs/discord-application-evidence.md`](docs/discord-application-evidence.md) and [`docs/submission-checklist.md`](docs/submission-checklist.md). Keep every undeployed item marked as pending; this repository intentionally does not fabricate usage, traction, or integrations.
+
+## Project documents
+
 - `docs/architecture.md`
+- `docs/demo-video-script.md`
+- `docs/grant-application.md`
+- `docs/technical-roadmap.md`
 - `docs/submission-checklist.md`
+- `docs/discord-application-evidence.md`
 - `Arc_Creator_Settlement_Pitch_Deck.pptx`
-
-All traction/deployment claims should be replaced with actual public transactions before submission. The package intentionally does not fabricate metrics or integrations.

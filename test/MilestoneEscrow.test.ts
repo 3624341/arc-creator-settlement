@@ -1,5 +1,7 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
+
+const { ethers } = hre;
 
 const usdc = (amount: string) => ethers.parseUnits(amount, 6);
 
@@ -34,7 +36,9 @@ describe("MilestoneEscrow", function () {
     expect(await token.balanceOf(await escrow.getAddress())).to.equal(usdc("1000"));
 
     await escrow.connect(creator).submitMilestone(0);
-    await escrow.connect(client).approveAndRelease(0);
+    await expect(escrow.connect(client).approveAndRelease(0))
+      .to.emit(escrow, "PaymentReleased")
+      .withArgs(0, creator.address, usdc("400"));
 
     expect(await token.balanceOf(creator.address)).to.equal(usdc("400"));
   });

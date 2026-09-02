@@ -1,4 +1,4 @@
-# 다음 단계 — 사용자 권한이 필요한 최소 작업
+# Arc Creator Settlement v0.3 — 사용자 권한이 필요한 최소 작업
 
 코드/스마트컨트랙트/Grant 문서는 준비되어 있다. 아래 값은 보안상 ChatGPT에 보내면 안 되며, **본인 PC의 `.env.local`에만 저장**한다.
 
@@ -130,7 +130,16 @@ http://localhost:3000
 5. Contract 상세 → USDC approve → deposit
 6. Creator milestone submit
 7. Client `approveAndRelease()`
-8. ArcScan에서 실제 transaction 확인
+8. 화면에 표시되는 `View public receipt`로 영수증 열기
+9. 영수증의 금액·Creator·Block과 ArcScan transaction 비교
+
+영수증 주소 형식:
+
+```text
+https://배포주소/receipt/0x전체_트랜잭션_해시
+```
+
+영수증은 지갑 연결 없이 열려야 한다. 데이터베이스가 없어도 작동하며, Arc RPC에서 transaction/event/contract state를 다시 검증한다.
 
 ---
 
@@ -153,13 +162,58 @@ ChatGPT에 알려줘도 되는 것:
 
 ---
 
-## 7. 배포 후 내가 이어서 정리할 것
+## 7. 선택 사항 — 공개 Recent Receipts 목록
+
+공용 영수증 목록이 필요할 때만 Supabase를 연결한다.
+
+1. Supabase SQL Editor에서 `supabase/schema.sql` 실행
+2. Vercel 서버 환경변수에 아래 두 값 추가
+
+```bash
+SUPABASE_URL=...
+SUPABASE_SECRET_KEY=...
+```
+
+`SUPABASE_SECRET_KEY`에는 절대 `NEXT_PUBLIC_` 접두사를 붙이지 않는다. Supabase가 없어도 개별 영수증과 브라우저 로컬 최근 기록은 정상 작동한다.
+
+---
+
+## 8. Vercel 배포
+
+GitHub 저장소를 Vercel에 Import한 뒤 `.env.example`의 공개 설정과 본인 Circle 설정을 입력한다. 먼저 Preview 배포에서 확인하고 Production으로 승격한다.
+
+필수 확인:
+
+1. `/`에서 Arc Testnet이 Online으로 표시되는지
+2. `/dashboard`가 열리는지
+3. 실제 milestone release 뒤 영수증 링크가 생기는지
+4. 로그아웃/시크릿 창에서도 영수증이 열리는지
+5. ArcScan과 영수증 값이 일치하는지
+
+---
+
+## 9. Discord 지원 자료 완성
+
+실제 배포와 transaction이 생기면 `docs/discord-application-evidence.md`의 `PENDING` 항목을 다음 실제 증거로 교체한다.
+
+- Vercel 공개 URL
+- Factory/escrow 주소
+- 전체 release transaction hash
+- 공개 receipt URL
+- ArcScan URL
+
+구현만 완료된 기능과 실제 배포·사용 증거를 구분해서 작성한다.
+
+---
+
+## 10. 배포 후 정리할 자료
 
 실제 factory 주소/transaction이 생기면 다음 자료의 placeholder를 실제 증거로 교체한다.
 
 - `docs/grant-application.md`
 - `docs/demo-video-script.md`
 - `docs/submission-checklist.md`
+- `docs/discord-application-evidence.md`
 - Pitch Deck
 - README
 

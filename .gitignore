@@ -13,3 +13,4 @@ recovery/
 
 .vercel
 .env*
+!.env.example
