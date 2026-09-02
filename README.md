@@ -1,5 +1,61 @@
 # Arc Creator Settlement v0.3
 
+Programmable USDC milestone settlement for creators, freelancers, and marketplaces on Arc.
+
+## Live verification
+
+- Live app: https://arc-creator-settlement-v0-2.vercel.app
+- GitHub: https://github.com/3624341/arc-creator-settlement
+- Korean Arc build guide: https://github.com/3624341/arc-korean-build-guide
+- Public receipt: https://arc-creator-settlement-v0-2.vercel.app/receipt/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+- ArcScan transaction: https://testnet.arcscan.app/tx/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+
+## Verified Arc Testnet deployment
+
+- Network: Arc Testnet
+- Chain ID: 5042002
+- USDC: `0x3600000000000000000000000000000000000000`
+- EscrowFactory: `0x5b90cdfecf1c59596e0b6b9cae448a29c2774e32`
+- Demo escrow: `0x22De463e9969b8Cef07b151b9cB5D8c5A16D81Df`
+- Circle user wallet: `0x066c22504a9281811368A4BB942bAd72659C5534`
+
+## What is implemented
+
+- CreatorEscrowFactory and isolated escrow contracts
+- Circle user-owned wallets on Arc Testnet
+- USDC escrow funding
+- Milestone submission and release
+- Public read-only settlement receipts
+- ArcScan verification links
+- Recovery-safe Circle Entity Secret workflow
+- Automated web and Solidity tests
+
+## Verified result
+
+The demo escrow was funded with 1 USDC.
+
+The first 0.25 USDC milestone was submitted and released onchain.
+
+Payment release transaction:
+
+`0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856`
+
+## Testing
+
+- Web tests: 19 passing
+- Solidity tests: 2 passing
+- Production build: passing
+
+## Roadmap
+
+- Improve transaction pending and failure handling
+- Add event indexing and operational observability
+- Expose reusable marketplace APIs
+- Explore Circle Gateway for cross-chain USDC funding
+- Complete a focused security review and controlled pilot
+
+# Arc Creator Settlement v0.3
+
 **Verifiable USDC milestone settlement on Arc for creators, freelancers, and marketplaces.**
 
 Arc Creator Settlement turns a project agreement into a USDC-funded escrow. A creator submits a milestone, the client releases payment, and v0.3 turns that release transaction into a public onchain receipt that anyone can verify without connecting a wallet.
