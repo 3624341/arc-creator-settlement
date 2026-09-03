@@ -116,6 +116,16 @@ On macOS/Linux, use `cp .env.example .env.local`. Open `http://localhost:3000`.
 
 No API key, entity secret, private key, or recovery file is included. See [`SETUP_NEXT_STEPS_KR.md`](SETUP_NEXT_STEPS_KR.md) for the exact Arc/Circle setup and deployment sequence.
 
+## Arc Builder Hub (standalone app)
+
+```bash
+cd arc-builder-hub
+npm install
+npm run dev
+```
+
+Build for deployment with `npm run build`; deploy the `arc-builder-hub` directory as its own Next.js project.
+
 ## Optional receipt index
 
 Receipts work without a database. To show a shared recent-receipts feed:
