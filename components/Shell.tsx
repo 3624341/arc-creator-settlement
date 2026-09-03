@@ -4,7 +4,8 @@ import { Wallet, ArrowUpRight, Menu } from "lucide-react";
 const navigation = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard#receipts", label: "Receipts" },
-  { href: "/wallet", label: "Circle Wallet" }
+  { href: "/wallet", label: "Circle Wallet" },
+  { href: "/builder", label: "Builder Hub" }
 ];
 
 export function Shell({ children }: { children: React.ReactNode }) {
