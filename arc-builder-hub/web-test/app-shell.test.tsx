@@ -6,6 +6,6 @@ import { readFileSync } from "node:fs";
 test("renders the Arc Builder Hub application shell", () => {
   const html = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
 
-  assert.match(html, /Builder Hub|KOREA-BASED ARC BUILDER/);
+  assert.match(html, /ARC BUILDER HUB|A builder’s field notes/);
   assert.match(html, /Build, ship, and verify on Arc/);
 });
