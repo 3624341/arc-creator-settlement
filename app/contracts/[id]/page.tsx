@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { Shell } from "@/components/Shell";
 import { Button } from "@/components/Button";
@@ -18,6 +18,8 @@ type WalletMode = "circle" | "browser";
 
 export default function ContractDetailPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const demoMode = searchParams.get("demo") === "1";
   const [address, setAddress] = useState<string>();
   const [title, setTitle] = useState("Settlement Contract");
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -214,10 +216,11 @@ export default function ContractDetailPage() {
           <button onClick={() => setWalletMode("browser")} className={`rounded-xl px-4 py-2 text-sm font-black ${walletMode === "browser" ? "bg-white shadow-sm" : "text-arc-muted"}`}>Browser Wallet</button>
           {walletMode === "circle" && !hasCircleSession ? <a href="/wallet" className="ml-auto rounded-xl px-4 py-2 text-sm font-black text-arc-purple">Set up Circle wallet →</a> : null}
         </div>
+        {demoMode ? <div className="mt-4 rounded-2xl border border-arc-lime/50 bg-arc-lime/20 p-4 text-sm font-bold text-arc-ink">Public demo mode is read-only. The milestone state and receipt below are loaded from Arc Testnet.</div> : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button onClick={approveDeposit}>Approve USDC</Button>
-          <Button className="bg-arc-lime text-arc-ink" onClick={deposit}>Deposit to escrow</Button>
+          <Button disabled={demoMode} onClick={approveDeposit}>Approve USDC</Button>
+          <Button disabled={demoMode} className="bg-arc-lime text-arc-ink" onClick={deposit}>Deposit to escrow</Button>
         </div>
         <div className="mt-8 space-y-4">
           {milestones.length === 0 ? <div className="rounded-3xl border border-arc-line bg-white p-5 text-arc-muted">Onchain milestones will appear after the escrow address is confirmed.</div> : null}
@@ -227,8 +230,8 @@ export default function ContractDetailPage() {
               <p className="font-black">{m.amount} USDC</p>
               <span className="w-fit rounded-full bg-arc-bg px-3 py-1 text-xs font-black">{m.status}</span>
               <div className="flex gap-2">
-                <Button className="px-4 py-2" onClick={() => submitMilestone(index)}>Submit</Button>
-                <Button disabled={pendingRelease === index} className="bg-arc-purple px-4 py-2" onClick={() => approveRelease(index)}>
+                <Button disabled={demoMode} className="px-4 py-2" onClick={() => submitMilestone(index)}>Submit</Button>
+                <Button disabled={demoMode || pendingRelease === index} className="bg-arc-purple px-4 py-2" onClick={() => approveRelease(index)}>
                   {pendingRelease === index ? "Confirming…" : "Release"}
                 </Button>
                 {receiptHashes[index] ? (
