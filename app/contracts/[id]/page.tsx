@@ -30,6 +30,18 @@ export default function ContractDetailPage() {
   const [creatorAddress, setCreatorAddress] = useState<string>();
   const [pendingRelease, setPendingRelease] = useState<number>();
   const [receiptHashes, setReceiptHashes] = useState<Record<number, string>>({});
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [retryAction, setRetryAction] = useState<(() => void) | undefined>();
+
+  function explainError(error: unknown, fallback: string) {
+    const message = error instanceof Error ? error.message : fallback;
+    const lower = message.toLowerCase();
+    if (lower.includes("user rejected") || lower.includes("denied")) return "Wallet approval was cancelled. You can try the action again when ready.";
+    if (lower.includes("insufficient") || lower.includes("balance")) return "There is not enough USDC or gas for this action. Fund the wallet, then retry.";
+    if (lower.includes("revert") || lower.includes("already")) return `${message} Check the milestone status before retrying.`;
+    if (lower.includes("network") || lower.includes("rpc")) return "Arc network could not be reached. Check your connection and retry.";
+    return message;
+  }
 
   useEffect(() => {
     const circle = getCircleSession();
@@ -100,6 +112,7 @@ export default function ContractDetailPage() {
   }
 
   async function approveDeposit() {
+    setErrorMessage(undefined); setRetryAction(() => () => void approveDeposit());
     try {
       if (!address) throw new Error("Escrow address missing.");
       if (walletMode === "circle") {
@@ -111,10 +124,11 @@ export default function ContractDetailPage() {
       const tx = await walletClient.writeContract({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account });
       setHash(tx);
       setStatus("USDC approval submitted.");
-    } catch (error) { setStatus(error instanceof Error ? error.message : "Approval failed"); }
+    } catch (error) { setErrorMessage(explainError(error, "Approval failed")); setStatus("Approval failed"); }
   }
 
   async function deposit() {
+    setErrorMessage(undefined); setRetryAction(() => () => void deposit());
     try {
       if (!address) throw new Error("Escrow address missing.");
       if (walletMode === "circle") {
@@ -126,10 +140,11 @@ export default function ContractDetailPage() {
       const tx = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "deposit", account });
       setHash(tx);
       setStatus("Deposit submitted.");
-    } catch (error) { setStatus(error instanceof Error ? error.message : "Deposit failed"); }
+    } catch (error) { setErrorMessage(explainError(error, "Deposit failed")); setStatus("Deposit failed"); }
   }
 
   async function submitMilestone(index: number) {
+    setErrorMessage(undefined); setRetryAction(() => () => void submitMilestone(index));
     try {
       if (!address) throw new Error("Escrow address missing.");
       if (walletMode === "circle") {
@@ -141,10 +156,11 @@ export default function ContractDetailPage() {
         setHash(tx);
       }
       setMilestones((prev) => prev.map((m, i) => i === index ? { ...m, status: "Submitted" } : m));
-    } catch (error) { setStatus(error instanceof Error ? error.message : "Milestone submit failed"); }
+    } catch (error) { setErrorMessage(explainError(error, "Milestone submit failed")); setStatus("Milestone submit failed"); }
   }
 
   async function approveRelease(index: number) {
+    setErrorMessage(undefined); setRetryAction(() => () => void approveRelease(index));
     setPendingRelease(index);
     try {
       if (!address) throw new Error("Escrow address missing.");
@@ -186,7 +202,7 @@ export default function ContractDetailPage() {
       setMilestones((prev) => prev.map((m, i) => i === index ? { ...m, status: "Paid" } : m));
       setStatus(`Milestone ${index + 1} paid. The public onchain receipt is ready.`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Release failed");
+      setErrorMessage(explainError(error, "Release failed")); setStatus("Release failed");
     } finally {
       setPendingRelease(undefined);
     }
@@ -244,6 +260,7 @@ export default function ContractDetailPage() {
           ))}
         </div>
         {status ? <p className="mt-6 rounded-2xl bg-arc-bg p-4 text-sm font-semibold text-arc-muted">{status}</p> : null}
+        {errorMessage ? <div role="alert" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700"><span>{errorMessage}</span>{retryAction ? <button className="rounded-full bg-red-700 px-4 py-2 text-xs font-black text-white" onClick={() => retryAction()}>Retry</button> : null}</div> : null}
         {hash ? <a className="mt-4 block font-black text-arc-purple" href={txUrl(hash)} target="_blank" rel="noreferrer">View latest transaction on ArcScan</a> : null}
       </section>
     </Shell>
