@@ -31,9 +31,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span className="block text-xl font-black">Creator Settlement</span>
           </span>
         </Link>
-        <nav className="hidden items-center gap-2 text-sm font-semibold md:flex">
-          {navigation.map((item) => <Link key={item.href} href={item.href} className={`rounded-xl px-3 py-2 hover:bg-white ${active(item.href) ? "bg-arc-lime text-arc-ink" : ""}`}>{item.label}</Link>)}
-          <Link href="/contracts/create" className={`rounded-full px-4 py-2 ${active("/contracts/create") ? "bg-arc-lime text-arc-ink" : "text-arc-ink hover:bg-white"}`}>Create Contract</Link>
+        <nav className="hidden items-center gap-2 border-l border-arc-line pl-4 text-sm font-semibold md:flex">
+          {navigation.map((item) => <Link key={item.href} href={item.href} className={`rounded-xl px-3 py-2 transition-colors ${active(item.href) ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>{item.label}</Link>)}
+          <Link href="/contracts/create" className={`rounded-xl px-4 py-2 transition-colors ${active("/contracts/create") ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>Create Contract</Link>
           <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-xl px-3 py-2 hover:bg-white">
             ArcScan <ArrowUpRight size={15} />
           </a>
