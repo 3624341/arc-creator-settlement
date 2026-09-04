@@ -24,14 +24,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-6 py-6">
       <header className="relative z-20 mb-8 flex items-center justify-between rounded-[2rem] border border-arc-line bg-white/75 px-4 py-3 shadow-sm backdrop-blur sm:px-5 sm:py-4">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/" className="flex shrink-0 items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-full bg-arc-ink text-white">A</span>
           <span>
             <span className="block text-sm font-semibold uppercase tracking-[0.22em] text-arc-muted">Arc</span>
-            <span className="block text-xl font-black">Creator Settlement</span>
+            <span className="block whitespace-nowrap text-xl font-black">Creator Settlement</span>
           </span>
         </Link>
-        <nav className="hidden items-center gap-2 border-l border-arc-line pl-4 text-sm font-semibold md:flex">
+        <nav className="ml-5 hidden shrink-0 items-center gap-2 border-l border-arc-line pl-5 text-sm font-semibold md:flex">
           {navigation.map((item) => <Link key={item.href} href={item.href} className={`rounded-xl px-3 py-2 transition-colors ${active(item.href) ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>{item.label}</Link>)}
           <Link href="/contracts/create" className={`rounded-xl px-4 py-2 transition-colors ${active("/contracts/create") ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>Create Contract</Link>
           <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-xl px-3 py-2 hover:bg-white">
