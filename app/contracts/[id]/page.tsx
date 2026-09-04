@@ -76,6 +76,11 @@ export default function ContractDetailPage() {
   }, [address]);
 
   const total = useMemo(() => milestones.reduce((sum, m) => sum + Number(m.amount.replaceAll(",", "")), 0), [milestones]);
+  const paid = useMemo(() => milestones.filter((m) => m.status === "Paid").reduce((sum, m) => sum + Number(m.amount.replaceAll(",", "")), 0), [milestones]);
+  const submitted = milestones.filter((m) => m.status === "Submitted").length;
+  const paidCount = milestones.filter((m) => m.status === "Paid").length;
+  const pendingCount = milestones.filter((m) => m.status === "Pending").length;
+  const progress = total > 0 ? Math.round((paid / total) * 100) : 0;
 
   async function browserEscrow() {
     if (!address) throw new Error("No escrow address. Create and confirm an onchain escrow first.");
@@ -194,6 +199,14 @@ export default function ContractDetailPage() {
           <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Total value</p><p className="text-3xl font-black">{total.toLocaleString()} USDC</p></div>
           <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Escrow address</p><p className="break-all text-sm font-black">{address ?? "Waiting for deployment"}</p></div>
           <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Network</p><p className="text-3xl font-black">Arc</p></div>
+        </div>
+        <div className="mt-4 rounded-3xl border border-arc-line bg-arc-ink p-5 text-white">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div><p className="text-sm text-white/60">Settlement progress</p><p className="mt-1 text-3xl font-black">{progress}% <span className="text-base font-semibold text-white/60">released</span></p></div>
+            <p className="text-sm font-bold text-white/70">{paid.toLocaleString()} / {total.toLocaleString()} USDC paid</p>
+          </div>
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-arc-lime transition-all" style={{ width: `${progress}%` }} /></div>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold text-white/70"><span><b className="text-arc-lime">{paidCount}</b> Paid</span><span><b className="text-white">{submitted}</b> Submitted</span><span><b className="text-white">{pendingCount}</b> Pending</span></div>
         </div>
 
         <div className="mt-6 flex gap-2 rounded-2xl bg-arc-bg p-2">
