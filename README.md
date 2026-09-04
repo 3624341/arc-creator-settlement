@@ -94,6 +94,10 @@ The receipt and ArcScan independently agree on the transaction hash, block `59,9
 6. The app waits for the exact confirmed event, then creates a shareable receipt URL.
 7. Opening the receipt re-verifies the transaction and contract state against Arc.
 
+## Developer integration guide
+
+See [`docs/integration-guide.md`](docs/integration-guide.md) for the exact Arc Testnet configuration, contract lifecycle, Circle Wallet path, receipt verification checklist, and the boundary between shipped and planned integration interfaces.
+
 ## Included stack
 
 - Next.js 15, React 19, TypeScript, Tailwind CSS
