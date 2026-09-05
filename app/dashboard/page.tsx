@@ -42,6 +42,39 @@ export default function DashboardPage() {
           <Link href={`/contracts/${DEMO_ESCROW}?demo=1`} className="rounded-full bg-arc-lime px-5 py-3 text-sm font-black text-arc-ink">Open public demo →</Link>
         </div>
       </section>
+      <section className="mt-8 rounded-[2rem] border border-black/10 bg-white/80 p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-arc-muted">Build Notes</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight">Built in public, verified on Arc.</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-arc-muted">
+              A short record of the product decisions and integration work behind this settlement demo.
+            </p>
+          </div>
+          <a
+            href="https://github.com/3624341/arc-creator-settlement/issues"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-arc-ink px-4 py-2 text-sm font-black text-arc-ink transition hover:bg-arc-ink hover:text-white"
+          >
+            Share feedback ↗
+          </a>
+        </div>
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl bg-arc-soft p-4">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-arc-muted">Public demo</p>
+            <p className="mt-2 text-sm font-bold">Read-only escrow flow with verified receipt evidence.</p>
+          </div>
+          <div className="rounded-2xl bg-arc-soft p-4">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-arc-muted">Transaction UX</p>
+            <p className="mt-2 text-sm font-bold">Actionable errors and retry guidance for failed writes.</p>
+          </div>
+          <div className="rounded-2xl bg-arc-soft p-4">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-arc-muted">Integration guide</p>
+            <p className="mt-2 text-sm font-bold">Arc Testnet, Circle Wallet, and verification notes for builders.</p>
+          </div>
+        </div>
+      </section>
       <section className="mt-8 grid gap-5 md:grid-cols-2">
         {contracts.map((contract) => <ContractCard key={contract.id} contract={contract} />)}
       </section>
