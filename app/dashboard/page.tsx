@@ -60,6 +60,7 @@ export default function DashboardPage() {
             Share feedback ↗
           </a>
         </div>
+        <Link href="/updates" className="mt-5 inline-flex text-sm font-black text-arc-purple hover:underline">View updates →</Link>
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           <div className="rounded-2xl bg-arc-soft p-4">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-arc-muted">Public demo</p>

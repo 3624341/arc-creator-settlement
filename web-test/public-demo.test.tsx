@@ -11,6 +11,12 @@ test("dashboard exposes the verified public demo", () => {
   assert.match(dashboard, /Share feedback/);
   assert.match(dashboard, /Integration guide/);
   assert.match(dashboard, /arc-creator-settlement\/issues/);
+  assert.match(dashboard, /View updates/);
+  const updates = readFileSync(new URL("../app/updates/page.tsx", import.meta.url), "utf8");
+  assert.match(updates, /Changelog/);
+  assert.match(updates, /Feedback status/);
+  assert.match(updates, /Shipped/);
+  assert.match(updates, /In progress/);
   assert.match(contract, /demoMode/);
   assert.match(contract, /read-only/);
 });
