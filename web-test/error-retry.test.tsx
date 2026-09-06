@@ -8,4 +8,8 @@ test("contract actions expose classified errors and retry", () => {
   assert.match(source, /role="alert"/);
   assert.match(source, />Retry</);
   assert.match(source, /insufficient/);
+  const shell = readFileSync(new URL("../components/Shell.tsx", import.meta.url), "utf8");
+  assert.match(shell, /connectError/);
+  assert.match(shell, /role="alert"/);
+  assert.match(shell, /catch/);
 });

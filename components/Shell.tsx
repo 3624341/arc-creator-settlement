@@ -18,8 +18,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [hash, setHash] = useState("");
   const [wallet, setWallet] = useState<string>();
   const [connectOpen, setConnectOpen] = useState(false);
+  const [connectError, setConnectError] = useState<string>();
   useEffect(() => { const sync = () => setHash(window.location.hash); sync(); const circle = getCircleSession(); if (circle) setWallet(circle.address); window.addEventListener("hashchange", sync); return () => window.removeEventListener("hashchange", sync); }, []);
-  async function connectBrowser() { await ensureArcNetwork(); const { account } = await getWalletClient(); setWallet(account); setConnectOpen(false); }
+  async function connectBrowser() {
+    setConnectError(undefined);
+    try {
+      await ensureArcNetwork();
+      const { account } = await getWalletClient();
+      setWallet(account);
+      setConnectOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Wallet connection failed. Try again.";
+      setConnectError(message.includes("rejected") || message.includes("denied") || message.includes("4001")
+        ? "Wallet connection was cancelled. Click Browser Wallet to try again."
+        : message);
+    }
+  }
   const active = (href: string) => href.includes("#") ? pathname === href.split("#")[0] && hash === "#receipts" : pathname === href;
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-6 py-6">
@@ -48,7 +62,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </details>
         <div className="relative ml-auto mr-3 hidden md:block">
           <button onClick={() => setConnectOpen((open) => !open)} className={`rounded-full px-4 py-2 text-sm font-black ${wallet ? "bg-arc-lime text-arc-ink" : "border border-arc-line bg-white"}`}>{wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "Connect Wallet"}</button>
-          {connectOpen ? <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl border border-arc-line bg-white p-3 shadow-xl"><p className="px-3 pb-2 text-xs font-black uppercase tracking-wider text-arc-muted">Choose wallet</p><button onClick={() => void connectBrowser()} className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold hover:bg-arc-bg">Browser Wallet<span className="block text-xs font-normal text-arc-muted">MetaMask · Rabby · Coinbase</span></button><Link href="/wallet" onClick={() => setConnectOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-bold hover:bg-arc-bg">Circle Wallet<span className="block text-xs font-normal text-arc-muted">User-owned wallet</span></Link>{wallet ? <button onClick={() => { clearCircleSession(); setWallet(undefined); setConnectOpen(false); }} className="mt-1 w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}</div> : null}
+          {connectOpen ? <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl border border-arc-line bg-white p-3 shadow-xl"><p className="px-3 pb-2 text-xs font-black uppercase tracking-wider text-arc-muted">Choose wallet</p><button onClick={() => void connectBrowser()} className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold hover:bg-arc-bg">Browser Wallet<span className="block text-xs font-normal text-arc-muted">MetaMask · Rabby · Coinbase</span></button><Link href="/wallet" onClick={() => setConnectOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-bold hover:bg-arc-bg">Circle Wallet<span className="block text-xs font-normal text-arc-muted">User-owned wallet</span></Link>{connectError ? <p role="alert" className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-5 text-red-700">{connectError}</p> : null}{wallet ? <button onClick={() => { clearCircleSession(); setWallet(undefined); setConnectOpen(false); }} className="mt-1 w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}</div> : null}
         </div>
       </header>
       {children}
