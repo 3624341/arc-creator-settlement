@@ -17,6 +17,9 @@ test("dashboard exposes the verified public demo", () => {
   assert.match(updates, /Feedback status/);
   assert.match(updates, /Shipped/);
   assert.match(updates, /In progress/);
+  const create = readFileSync(new URL("../app/contracts/create/page.tsx", import.meta.url), "utf8");
+  assert.match(create, /useRouter/);
+  assert.match(create, /router\.push/);
   assert.match(contract, /demoMode/);
   assert.match(contract, /read-only/);
 });

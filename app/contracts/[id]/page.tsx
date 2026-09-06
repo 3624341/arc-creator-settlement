@@ -20,6 +20,7 @@ export default function ContractDetailPage() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const demoMode = searchParams.get("demo") === "1";
+  const created = searchParams.get("created") === "1";
   const [address, setAddress] = useState<string>();
   const [title, setTitle] = useState("Settlement Contract");
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -212,6 +213,7 @@ export default function ContractDetailPage() {
     <Shell>
       <section className="rounded-[2rem] border border-arc-line bg-white/75 p-7 shadow-sm">
         <p className="text-sm font-bold uppercase tracking-[0.22em] text-arc-muted">Settlement contract</p>
+        {created ? <div role="status" className="mt-4 rounded-2xl border border-arc-lime/60 bg-arc-lime/20 p-4 text-sm font-bold text-arc-ink">Contract created successfully. Review the new escrow and continue from this page.</div> : null}
         <h1 className="mt-2 text-5xl font-black tracking-tight">{title}</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Total value</p><p className="text-3xl font-black">{total.toLocaleString()} USDC</p></div>

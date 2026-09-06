@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Shell, WalletBadge } from "@/components/Shell";
 import { Button } from "@/components/Button";
 import { factoryAbi } from "@/lib/abi";
@@ -16,6 +17,7 @@ type MilestoneInput = typeof emptyMilestone;
 type WalletMode = "circle" | "browser";
 
 export default function CreateContractPage() {
+  const router = useRouter();
   const [account, setAccount] = useState<string>();
   const [walletMode, setWalletMode] = useState<WalletMode>("circle");
   const [hasCircleSession, setHasCircleSession] = useState(false);
@@ -101,6 +103,10 @@ export default function CreateContractPage() {
           if (latest?.args?.escrow) escrowAddress = latest.args.escrow;
         }
         saveLocal(escrowAddress);
+        if (escrowAddress) {
+          router.push(`/contracts/${escrowAddress}?created=1`);
+          return;
+        }
         setStatus(escrowAddress ? `Escrow created on Arc: ${escrowAddress}` : "Transaction approved. Arc confirmation is still indexing; check ArcScan and refresh shortly.");
         return;
       }
@@ -117,7 +123,7 @@ export default function CreateContractPage() {
         account
       });
       saveLocal();
-      setStatus(`Factory transaction submitted: ${hash}`);
+      router.push(`/dashboard?created=1&tx=${hash}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Create escrow failed");
     }
