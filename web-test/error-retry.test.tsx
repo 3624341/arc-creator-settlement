@@ -15,4 +15,8 @@ test("contract actions expose classified errors and retry", () => {
   const wallet = readFileSync(new URL("../lib/browser-wallet.ts", import.meta.url), "utf8");
   assert.match(wallet, /provider/);
   assert.match(shell, /OKX Wallet/);
+  assert.match(shell, /MetaMask/);
+  assert.match(shell, /Rabby Wallet/);
+  assert.match(shell, /Coinbase Wallet/);
+  assert.match(wallet, /resolveBrowserProvider/);
 });
