@@ -12,6 +12,7 @@ const navigation = [
   { href: "/dashboard#receipts", label: "Receipts" },
   { href: "/wallet", label: "Circle Wallet" },
 ];
+const BROWSER_WALLET_STORAGE = "arc-browser-wallet";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,7 +21,37 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [connectOpen, setConnectOpen] = useState(false);
   const [connectError, setConnectError] = useState<string>();
   const [browserWalletOpen, setBrowserWalletOpen] = useState(false);
-  useEffect(() => { const sync = () => setHash(window.location.hash); sync(); const circle = getCircleSession(); if (circle) setWallet(circle.address); window.addEventListener("hashchange", sync); return () => window.removeEventListener("hashchange", sync); }, []);
+  useEffect(() => {
+    const sync = () => setHash(window.location.hash);
+    sync();
+    const circle = getCircleSession();
+    if (circle) setWallet(circle.address);
+    const stored = localStorage.getItem(BROWSER_WALLET_STORAGE);
+    let provider: any;
+    let handleAccountsChanged: ((accounts: string[]) => void) | undefined;
+    if (stored) {
+      try {
+        const { name } = JSON.parse(stored) as { name: BrowserWalletName };
+        provider = resolveBrowserProvider(name);
+        void provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+          if (accounts[0]) setWallet(accounts[0]);
+          else localStorage.removeItem(BROWSER_WALLET_STORAGE);
+        }).catch(() => localStorage.removeItem(BROWSER_WALLET_STORAGE));
+        handleAccountsChanged = (accounts) => {
+          if (accounts[0]) setWallet(accounts[0]);
+          else { setWallet(undefined); localStorage.removeItem(BROWSER_WALLET_STORAGE); }
+        };
+        provider.on?.("accountsChanged", handleAccountsChanged);
+      } catch {
+        localStorage.removeItem(BROWSER_WALLET_STORAGE);
+      }
+    }
+    window.addEventListener("hashchange", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+      if (provider && handleAccountsChanged) provider.removeListener?.("accountsChanged", handleAccountsChanged);
+    };
+  }, []);
   async function connectBrowser(name: BrowserWalletName = "metamask") {
     setConnectError(undefined);
     try {
@@ -28,6 +59,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       await ensureArcNetwork(provider);
       const { account } = await getWalletClient(provider);
       setWallet(account);
+      localStorage.setItem(BROWSER_WALLET_STORAGE, JSON.stringify({ name }));
       setConnectOpen(false);
       setBrowserWalletOpen(false);
     } catch (error) {
@@ -65,7 +97,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </details>
         <div className="relative ml-auto mr-3 hidden md:block">
           <button onClick={() => setConnectOpen((open) => !open)} className={`rounded-full px-4 py-2 text-sm font-black ${wallet ? "bg-arc-lime text-arc-ink" : "border border-arc-line bg-white"}`}>{wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "Connect Wallet"}</button>
-          {connectOpen ? <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl border border-arc-line bg-white p-3 shadow-xl"><p className="px-3 pb-2 text-xs font-black uppercase tracking-wider text-arc-muted">Choose wallet</p><button onClick={() => setBrowserWalletOpen((open) => !open)} className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold hover:bg-arc-bg">Browser Wallet<span className="block text-xs font-normal text-arc-muted">Choose MetaMask, OKX, Rabby, or Coinbase</span></button>{browserWalletOpen ? <div className="mt-1 grid gap-1 rounded-xl bg-arc-bg/70 p-2"><button onClick={() => void connectBrowser("metamask")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">MetaMask</button><button onClick={() => void connectBrowser("okx")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">OKX Wallet</button><button onClick={() => void connectBrowser("rabby")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Rabby Wallet</button><button onClick={() => void connectBrowser("coinbase")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Coinbase Wallet</button></div> : null}<Link href="/wallet" onClick={() => setConnectOpen(false)} className="mt-1 block rounded-xl px-3 py-3 text-sm font-bold hover:bg-arc-bg">Circle Wallet<span className="block text-xs font-normal text-arc-muted">User-owned wallet</span></Link>{connectError ? <p role="alert" className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-5 text-red-700">{connectError}</p> : null}{wallet ? <button onClick={() => { clearCircleSession(); setWallet(undefined); setConnectOpen(false); }} className="mt-1 w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}</div> : null}
+          {connectOpen ? <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl border border-arc-line bg-white p-3 shadow-xl"><p className="px-3 pb-2 text-xs font-black uppercase tracking-wider text-arc-muted">Choose wallet</p><button onClick={() => setBrowserWalletOpen((open) => !open)} className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold hover:bg-arc-bg">Browser Wallet<span className="block text-xs font-normal text-arc-muted">Choose MetaMask, OKX, Rabby, or Coinbase</span></button>{browserWalletOpen ? <div className="mt-1 grid gap-1 rounded-xl bg-arc-bg/70 p-2"><button onClick={() => void connectBrowser("metamask")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">MetaMask</button><button onClick={() => void connectBrowser("okx")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">OKX Wallet</button><button onClick={() => void connectBrowser("rabby")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Rabby Wallet</button><button onClick={() => void connectBrowser("coinbase")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Coinbase Wallet</button></div> : null}<Link href="/wallet" onClick={() => setConnectOpen(false)} className="mt-1 block rounded-xl px-3 py-3 text-sm font-bold hover:bg-arc-bg">Circle Wallet<span className="block text-xs font-normal text-arc-muted">User-owned wallet</span></Link>{connectError ? <p role="alert" className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-5 text-red-700">{connectError}</p> : null}{wallet ? <button onClick={() => { clearCircleSession(); localStorage.removeItem(BROWSER_WALLET_STORAGE); setWallet(undefined); setConnectOpen(false); }} className="mt-1 w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}</div> : null}
         </div>
       </header>
       {children}

@@ -19,4 +19,8 @@ test("contract actions expose classified errors and retry", () => {
   assert.match(shell, /Rabby Wallet/);
   assert.match(shell, /Coinbase Wallet/);
   assert.match(wallet, /resolveBrowserProvider/);
+  assert.match(shell, /localStorage\.setItem/);
+  assert.match(shell, /arc-browser-wallet/);
+  assert.match(shell, /eth_accounts/);
+  assert.match(shell, /accountsChanged/);
 });
