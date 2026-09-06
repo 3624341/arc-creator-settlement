@@ -12,4 +12,7 @@ test("contract actions expose classified errors and retry", () => {
   assert.match(shell, /connectError/);
   assert.match(shell, /role="alert"/);
   assert.match(shell, /catch/);
+  const wallet = readFileSync(new URL("../lib/browser-wallet.ts", import.meta.url), "utf8");
+  assert.match(wallet, /provider/);
+  assert.match(shell, /OKX Wallet/);
 });

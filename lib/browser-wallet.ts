@@ -4,6 +4,7 @@ import { arcTestnet, ARC_RPC_URL } from "./arc";
 declare global {
   interface Window {
     ethereum?: any;
+    okxwallet?: any;
   }
 }
 
@@ -11,23 +12,23 @@ export function getPublicClient() {
   return createPublicClient({ chain: arcTestnet, transport: http(ARC_RPC_URL) });
 }
 
-export async function getWalletClient() {
-  if (!window.ethereum) throw new Error("No injected wallet found. Install MetaMask, Rabby, or Coinbase Wallet.");
-  const walletClient = createWalletClient({ chain: arcTestnet, transport: custom(window.ethereum) });
+export async function getWalletClient(provider = window.ethereum) {
+  if (!provider) throw new Error("No injected wallet found. Install MetaMask, Rabby, Coinbase Wallet, or OKX Wallet.");
+  const walletClient = createWalletClient({ chain: arcTestnet, transport: custom(provider) });
   const [account] = await walletClient.requestAddresses();
   return { walletClient, account };
 }
 
-export async function ensureArcNetwork() {
-  if (!window.ethereum) throw new Error("No injected wallet found.");
+export async function ensureArcNetwork(provider = window.ethereum) {
+  if (!provider) throw new Error("No injected wallet found. Install a browser wallet first.");
   try {
-    await window.ethereum.request({
+    await provider.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: `0x${arcTestnet.id.toString(16)}` }]
     });
   } catch (error: any) {
     if (error?.code === 4902) {
-      await window.ethereum.request({
+      await provider.request({
         method: "wallet_addEthereumChain",
         params: [{
           chainId: `0x${arcTestnet.id.toString(16)}`,
