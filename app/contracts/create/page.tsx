@@ -207,9 +207,10 @@ export default function CreateContractPage() {
                 <button className="text-sm font-black text-arc-purple" onClick={() => setMilestones((m) => [...m, emptyMilestone])}>+ Add milestone</button>
               </div>
               {milestones.map((m, index) => (
-                <div key={index} className="grid gap-3 rounded-3xl border border-arc-line bg-arc-bg p-4 md:grid-cols-[1fr_10rem]">
+                <div key={index} className="grid gap-3 rounded-3xl border border-arc-line bg-arc-bg p-4 md:grid-cols-[1fr_10rem_auto]">
                   <input className="rounded-2xl border border-arc-line bg-white px-4 py-3" placeholder="Milestone description" value={m.description} onChange={(e) => updateMilestone(index, "description", e.target.value)} />
                   <input className="rounded-2xl border border-arc-line bg-white px-4 py-3" placeholder="USDC" inputMode="decimal" value={m.amount} onChange={(e) => updateMilestone(index, "amount", e.target.value)} />
+                  <button type="button" className="rounded-2xl border border-red-200 px-4 py-3 text-sm font-black text-red-600 hover:bg-red-50" onClick={() => setMilestones((current) => current.filter((_, i) => i !== index))}>Remove</button>
                 </div>
               ))}
             </div>
