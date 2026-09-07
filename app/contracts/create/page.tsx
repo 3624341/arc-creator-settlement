@@ -9,13 +9,14 @@ import { ensureArcNetwork, getPublicClient, getWalletClient, resolveBrowserProvi
 import { ESCROW_FACTORY_ADDRESS } from "@/lib/arc";
 import { parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
-import type { LocalContract } from "@/components/ContractCard";
+import type { LocalContract } from "@/lib/marketplace-store";
 
 const emptyMilestone = { description: "", amount: "" };
 type MilestoneInput = typeof emptyMilestone;
 
 type WalletMode = "circle" | "browser";
 const BROWSER_WALLET_STORAGE = "arc-browser-wallet";
+const CREATE_DRAFT_STORAGE = "arc-create-contract-draft";
 
 export default function CreateContractPage() {
   const router = useRouter();
@@ -23,15 +24,28 @@ export default function CreateContractPage() {
   const [walletMode, setWalletMode] = useState<WalletMode>("circle");
   const [browserWalletName, setBrowserWalletName] = useState<BrowserWalletName>();
   const [hasCircleSession, setHasCircleSession] = useState(false);
-  const [title, setTitle] = useState("Tokyo Skincare Campaign");
-  const [creator, setCreator] = useState("0xA3b2D9386b5DCC9A7366E9985F913D7fE827D4E0");
-  const [milestones, setMilestones] = useState<MilestoneInput[]>([
-    { description: "Contract accepted", amount: "200" },
-    { description: "Content produced", amount: "300" },
-    { description: "Content published", amount: "300" },
-    { description: "Campaign completed", amount: "200" }
-  ]);
+  const [title, setTitle] = useState("");
+  const [creator, setCreator] = useState("");
+  const [milestones, setMilestones] = useState<MilestoneInput[]>([]);
+  const [draftLoaded, setDraftLoaded] = useState(false);
   const [status, setStatus] = useState<string>("");
+
+  useEffect(() => {
+    try {
+      const draft = JSON.parse(localStorage.getItem(CREATE_DRAFT_STORAGE) ?? "null") as { title?: string; creator?: string; milestones?: MilestoneInput[] } | null;
+      if (draft) {
+        setTitle(draft.title ?? "");
+        setCreator(draft.creator ?? "");
+        setMilestones(Array.isArray(draft.milestones) ? draft.milestones : []);
+      }
+    } catch { /* ignore malformed draft */ }
+    setDraftLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+    localStorage.setItem(CREATE_DRAFT_STORAGE, JSON.stringify({ title, creator, milestones }));
+  }, [draftLoaded, title, creator, milestones]);
 
   useEffect(() => {
     const session = getCircleSession();
@@ -82,12 +96,15 @@ export default function CreateContractPage() {
       id: escrowAddress ?? `pending-${Date.now()}`,
       title,
       creator,
+      advertiser: account ?? creator,
+      owner: account ?? creator,
       totalUsdc: String(total),
       status: escrowAddress ? "Created" : "Pending onchain",
       escrowAddress
     };
     const existing = JSON.parse(localStorage.getItem("arc-settlement-contracts") ?? "[]");
     localStorage.setItem("arc-settlement-contracts", JSON.stringify([contract, ...existing]));
+    localStorage.removeItem(CREATE_DRAFT_STORAGE);
     return contract;
   }
 

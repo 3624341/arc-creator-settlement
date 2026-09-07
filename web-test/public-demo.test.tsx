@@ -20,6 +20,9 @@ test("dashboard exposes the verified public demo", () => {
   const create = readFileSync(new URL("../app/contracts/create/page.tsx", import.meta.url), "utf8");
   assert.match(create, /useRouter/);
   assert.match(create, /router\.push/);
+  assert.match(create, /arc-create-contract-draft/);
+  assert.match(create, /useState\(""\)/);
+  assert.match(create, /advertiser: account \?\? creator/);
   assert.match(contract, /demoMode/);
   assert.match(contract, /read-only/);
 });
