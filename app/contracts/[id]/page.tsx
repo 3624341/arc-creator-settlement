@@ -12,6 +12,7 @@ import { ARC_USDC_ADDRESS, txUrl } from "@/lib/arc";
 import { formatUsdc, parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import { findCircleReleaseTransaction, requestReceiptIndex, saveRecentReceipt } from "@/lib/receipts/client";
+import { getApplications, isWalletOwner, saveApplication, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
 type WalletMode = "circle" | "browser";
@@ -33,6 +34,10 @@ export default function ContractDetailPage() {
   const [receiptHashes, setReceiptHashes] = useState<Record<number, string>>({});
   const [errorMessage, setErrorMessage] = useState<string>();
   const [retryAction, setRetryAction] = useState<(() => void) | undefined>();
+  const [walletAddress, setWalletAddress] = useState<string>();
+  const [localContract, setLocalContract] = useState<LocalContract>();
+  const [application, setApplication] = useState<JobApplication>();
+  const [applicationFeedback, setApplicationFeedback] = useState<string>();
 
   function explainError(error: unknown, fallback: string) {
     const message = error instanceof Error ? error.message : fallback;
@@ -47,13 +52,75 @@ export default function ContractDetailPage() {
   useEffect(() => {
     const circle = getCircleSession();
     setHasCircleSession(Boolean(circle));
+    if (circle?.address) setWalletAddress(circle.address);
     const raw = localStorage.getItem("arc-settlement-contracts");
-    const contracts = raw ? JSON.parse(raw) : [];
+    let contracts: LocalContract[] = [];
+    try {
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      contracts = Array.isArray(parsed) ? parsed as LocalContract[] : [];
+    } catch {
+      contracts = [];
+    }
     const found = contracts.find((c: any) => c.id === params.id || c.escrowAddress === params.id);
+    if (found) {
+      setLocalContract(found);
+      setApplication(getApplications().find((candidate) => candidate.contractId === found.id));
+    }
+    if (!circle?.address) {
+      try {
+        const browserWallet = JSON.parse(localStorage.getItem("arc-browser-wallet") ?? "null") as { name?: string } | null;
+        const provider = browserWallet?.name === "okx" ? window.okxwallet : window.ethereum;
+        void provider?.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+          if (accounts[0]) setWalletAddress(accounts[0]);
+        }).catch(() => undefined);
+      } catch {
+        // A malformed browser-wallet preference should not block contract inspection.
+      }
+    }
     const candidate = found?.escrowAddress || (/^0x[a-fA-F0-9]{40}$/.test(params.id) ? params.id : undefined);
     if (found?.title) setTitle(found.title);
     if (candidate) setAddress(candidate);
   }, [params.id]);
+
+  const isOwner = Boolean(walletAddress && (localContract
+    ? isWalletOwner(walletAddress, localContract)
+    : creatorAddress && walletAddress.toLowerCase() === creatorAddress.toLowerCase()));
+
+  function handleApply() {
+    setApplicationFeedback(undefined);
+    if (demoMode) {
+      setApplicationFeedback("Public demo mode is read-only. Connect to a live contract to apply.");
+      return;
+    }
+    if (!walletAddress) {
+      setApplicationFeedback("Connect a wallet before applying as a creator.");
+      return;
+    }
+    if (isOwner) {
+      setApplicationFeedback("Contract owners cannot apply to their own job.");
+      return;
+    }
+    if (application) {
+      setApplicationFeedback("Application already submitted.");
+      return;
+    }
+    const contractId = localContract?.id ?? params.id;
+    const next: JobApplication = {
+      id: `application-${contractId}-${walletAddress.toLowerCase()}`,
+      contractId,
+      applicant: walletAddress,
+      status: "Applied",
+      appliedAt: new Date().toISOString()
+    };
+    const result = saveApplication(next, { contracts: localContract ? [localContract] : undefined });
+    if (!result.ok) {
+      setApplicationFeedback(result.error === "duplicate" ? "Application already submitted." : result.error === "owner" ? "Contract owners cannot apply to their own job." : "Could not save your application. Try again.");
+      if (result.error === "duplicate") setApplication(next);
+      return;
+    }
+    setApplication(result.application);
+    setApplicationFeedback("Application submitted. The advertiser can now review your profile.");
+  }
 
   useEffect(() => {
     if (!address) return;
@@ -235,6 +302,18 @@ export default function ContractDetailPage() {
           {walletMode === "circle" && !hasCircleSession ? <a href="/wallet" className="ml-auto rounded-xl px-4 py-2 text-sm font-black text-arc-purple">Set up Circle wallet →</a> : null}
         </div>
         {demoMode ? <div className="mt-4 rounded-2xl border border-arc-lime/50 bg-arc-lime/20 p-4 text-sm font-bold text-arc-ink">Public demo mode is read-only. The milestone state and receipt below are loaded from Arc Testnet.</div> : null}
+
+        <div className="mt-4 rounded-3xl border border-arc-line bg-white p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-arc-muted">Creator opportunity</p>
+              <p className="mt-1 font-black">{application ? "Application status: Applied" : "Interested in this job?"}</p>
+              {applicationFeedback ? <p role="status" className="mt-2 text-sm font-semibold text-arc-muted">{applicationFeedback}</p> : null}
+            </div>
+            {!isOwner && !application ? <Button disabled={demoMode} onClick={handleApply}>Apply as creator</Button> : null}
+            {application ? <span className="rounded-full bg-arc-lime px-4 py-2 text-sm font-black text-arc-ink">Applied</span> : null}
+          </div>
+        </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Button disabled={demoMode} onClick={approveDeposit}>Approve USDC</Button>
