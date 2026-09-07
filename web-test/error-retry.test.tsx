@@ -23,4 +23,9 @@ test("contract actions expose classified errors and retry", () => {
   assert.match(shell, /arc-browser-wallet/);
   assert.match(shell, /eth_accounts/);
   assert.match(shell, /accountsChanged/);
+  const create = readFileSync(new URL("../app/contracts/create/page.tsx", import.meta.url), "utf8");
+  assert.match(create, /arc-browser-wallet/);
+  assert.match(create, /eth_accounts/);
+  assert.match(create, /setWalletMode\("browser"\)/);
+  assert.match(create, /walletMode === "browser" && !account/);
 });

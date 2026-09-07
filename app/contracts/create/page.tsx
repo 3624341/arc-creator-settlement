@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Shell, WalletBadge } from "@/components/Shell";
 import { Button } from "@/components/Button";
 import { factoryAbi } from "@/lib/abi";
-import { ensureArcNetwork, getPublicClient, getWalletClient } from "@/lib/browser-wallet";
+import { ensureArcNetwork, getPublicClient, getWalletClient, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import { ESCROW_FACTORY_ADDRESS } from "@/lib/arc";
 import { parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
@@ -15,6 +15,7 @@ const emptyMilestone = { description: "", amount: "" };
 type MilestoneInput = typeof emptyMilestone;
 
 type WalletMode = "circle" | "browser";
+const BROWSER_WALLET_STORAGE = "arc-browser-wallet";
 
 export default function CreateContractPage() {
   const router = useRouter();
@@ -34,7 +35,27 @@ export default function CreateContractPage() {
   useEffect(() => {
     const session = getCircleSession();
     setHasCircleSession(Boolean(session));
-    if (session) setAccount(session.address);
+    if (session) {
+      setAccount(session.address);
+      return;
+    }
+
+    const stored = localStorage.getItem(BROWSER_WALLET_STORAGE);
+    if (!stored) return;
+    try {
+      const wallet = JSON.parse(stored) as { name?: BrowserWalletName; address?: string };
+      if (!wallet.name) return;
+      const provider = resolveBrowserProvider(wallet.name);
+      void provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+        const address = accounts[0] ?? wallet.address;
+        if (address) {
+          setAccount(address);
+          setWalletMode("browser");
+        }
+      }).catch(() => undefined);
+    } catch {
+      localStorage.removeItem(BROWSER_WALLET_STORAGE);
+    }
   }, []);
 
   const total = milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0);
@@ -172,7 +193,7 @@ export default function CreateContractPage() {
                 <p className="text-3xl font-black">{total.toLocaleString()} USDC</p>
               </div>
               <div className="flex gap-3">
-                {walletMode === "browser" ? <Button className="bg-white text-arc-ink" onClick={connectBrowser}>Connect wallet</Button> : null}
+                {walletMode === "browser" && !account ? <Button className="bg-white text-arc-ink" onClick={connectBrowser}>Connect wallet</Button> : null}
                 <Button className="bg-arc-lime text-arc-ink" onClick={createOnchain}>Create escrow</Button>
               </div>
             </div>
