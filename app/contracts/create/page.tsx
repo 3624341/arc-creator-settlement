@@ -161,13 +161,21 @@ export default function CreateContractPage() {
       const provider = resolveBrowserProvider(name);
       await ensureArcNetwork(provider);
       const { walletClient, account } = await getWalletClient(provider);
+      const gas = await getPublicClient().estimateContractGas({
+        address: ESCROW_FACTORY_ADDRESS,
+        abi: factoryAbi,
+        functionName: "createEscrow",
+        args: [creator as `0x${string}`, title, milestones.map((m) => m.description), milestones.map((m) => parseUsdc(m.amount))],
+        account
+      });
       setAccount(account);
       const hash = await walletClient.writeContract({
         address: ESCROW_FACTORY_ADDRESS,
         abi: factoryAbi,
         functionName: "createEscrow",
         args: [creator as `0x${string}`, title, milestones.map((m) => m.description), milestones.map((m) => parseUsdc(m.amount))],
-        account
+        account,
+        gas,
       });
       saveLocal();
       router.push(`/dashboard?created=1&tx=${hash}`);

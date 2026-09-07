@@ -192,7 +192,8 @@ export default function ContractDetailPage() {
       }
       const { walletClient, account, escrow } = await browserEscrow();
       setStatus("Approving USDC allowance...");
-      const tx = await walletClient.writeContract({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account });
+      const gas = await getPublicClient().estimateContractGas({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account });
+      const tx = await walletClient.writeContract({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account, gas });
       setHash(tx);
       setStatus("USDC approval submitted.");
     } catch (error) { setErrorMessage(explainError(error, "Approval failed")); setStatus("Approval failed"); }
@@ -208,7 +209,8 @@ export default function ContractDetailPage() {
       }
       const { walletClient, account, escrow } = await browserEscrow();
       setStatus("Depositing USDC into escrow...");
-      const tx = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "deposit", account });
+      const gas = await getPublicClient().estimateContractGas({ address: escrow, abi: escrowAbi, functionName: "deposit", account });
+      const tx = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "deposit", account, gas });
       setHash(tx);
       setStatus("Deposit submitted.");
     } catch (error) { setErrorMessage(explainError(error, "Deposit failed")); setStatus("Deposit failed"); }
@@ -223,7 +225,8 @@ export default function ContractDetailPage() {
       } else {
         const { walletClient, account, escrow } = await browserEscrow();
         setStatus(`Submitting milestone ${index + 1}...`);
-        const tx = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "submitMilestone", args: [BigInt(index)], account });
+        const gas = await getPublicClient().estimateContractGas({ address: escrow, abi: escrowAbi, functionName: "submitMilestone", args: [BigInt(index)], account });
+        const tx = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "submitMilestone", args: [BigInt(index)], account, gas });
         setHash(tx);
       }
       setMilestones((prev) => prev.map((m, i) => i === index ? { ...m, status: "Submitted" } : m));
@@ -260,7 +263,8 @@ export default function ContractDetailPage() {
       } else {
         const { walletClient, account, escrow } = await browserEscrow();
         setStatus(`Approving and releasing milestone ${index + 1}...`);
-        transactionHash = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "approveAndRelease", args: [BigInt(index)], account });
+        const gas = await publicClient.estimateContractGas({ address: escrow, abi: escrowAbi, functionName: "approveAndRelease", args: [BigInt(index)], account });
+        transactionHash = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "approveAndRelease", args: [BigInt(index)], account, gas });
         setHash(transactionHash);
         setStatus("Release submitted. Waiting for Arc confirmation...");
         const transaction = await publicClient.waitForTransactionReceipt({ hash: transactionHash });

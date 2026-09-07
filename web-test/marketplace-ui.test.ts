@@ -19,3 +19,7 @@ test("creator application respects demo mode and hides the action for owners", (
   assert.match(source, /getCircleSession\(\)/);
   assert.match(source, /arc-browser-wallet/);
 });
+
+test("browser wallet writes include explicit gas for OKX", () => {
+  assert.match(source, /estimateContractGas/);
+});
