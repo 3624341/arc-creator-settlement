@@ -27,7 +27,7 @@ export default function Home() {
         <div className="rounded-[3rem] border border-arc-line bg-white/75 p-7 shadow-sm">
           <div className="rounded-[2.5rem] bg-arc-ink p-7 text-white">
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-arc-cyan">Settlement Contract</p>
-            <h2 className="mt-4 text-4xl font-black">Tokyo Skincare Campaign</h2>
+            <h2 className="mt-4 text-4xl font-black">Create and Publish Content About Arc Network</h2>
             <div className="mt-8 space-y-4">
               {[
                 ["Contract accepted", "200 USDC", "Paid"],
