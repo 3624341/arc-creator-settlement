@@ -2,7 +2,7 @@ import { ESCROW_FACTORY_ADDRESS } from "./arc";
 import { escrowAbi, factoryAbi } from "./abi";
 import { getPublicClient } from "./browser-wallet";
 import { formatUsdc } from "./format";
-import type { LocalContract } from "./marketplace-store";
+import { isWalletOwner, type LocalContract } from "./marketplace-store";
 
 // The deployed factory is public infrastructure for this testnet MVP. Keep the
 // fallback so public listings work even when a local environment omits the env var.
@@ -26,6 +26,17 @@ export function mergeMarketplaceContracts(publicContracts: LocalContract[], loca
     merged.set(key, contract);
   }
   return [...merged.values()];
+}
+
+export function contractsForWallet(wallet: string, publicContracts: LocalContract[], localContracts: LocalContract[]) {
+  return mergeMarketplaceContracts(publicContracts, localContracts).filter((contract) => isWalletOwner(wallet, contract));
+}
+
+export function sumContractTotals(contracts: Pick<LocalContract, "totalUsdc">[]) {
+  return contracts.reduce((sum, contract) => {
+    const value = Number(String(contract.totalUsdc ?? "0").replaceAll(",", ""));
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
 }
 
 async function readPublicContract(client: ReadClient, escrowAddress: `0x${string}`): Promise<LocalContract | undefined> {

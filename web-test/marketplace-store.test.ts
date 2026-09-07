@@ -9,7 +9,12 @@ import {
   type LocalContract,
   type StorageLike
 } from "../lib/marketplace-store";
-import { loadPublicMarketplaceContracts, mergeMarketplaceContracts } from "../lib/marketplace-chain";
+import {
+  contractsForWallet,
+  loadPublicMarketplaceContracts,
+  mergeMarketplaceContracts,
+  sumContractTotals
+} from "../lib/marketplace-chain";
 
 class MemoryStorage implements StorageLike {
   private values = new Map<string, string>();
@@ -99,6 +104,25 @@ test("public chain contracts remain visible when the browser has no local record
   };
 
   assert.deepEqual(mergeMarketplaceContracts([publicContract], []), [publicContract]);
+});
+
+test("wallet workspace includes public contracts created by the connected wallet", () => {
+  const publicContract: LocalContract = {
+    id: "0xpublic-escrow",
+    escrowAddress: "0xpublic-escrow",
+    title: "Create and Publish Content About Arc Network",
+    creator: advertiser,
+    advertiser,
+    owner: advertiser,
+    totalUsdc: "1,000",
+    status: "Created"
+  };
+
+  assert.deepEqual(contractsForWallet(advertiser.toLowerCase(), [publicContract], []), [publicContract]);
+});
+
+test("sums formatted public contract totals without producing NaN", () => {
+  assert.equal(sumContractTotals([{ totalUsdc: "50" }, { totalUsdc: "1,000" }]), 1050);
 });
 
 test("loads public contracts from the deployed factory registry", async () => {

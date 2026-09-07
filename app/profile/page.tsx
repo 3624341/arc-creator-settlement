@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Shell } from "@/components/Shell";
 import { getCircleSession } from "@/lib/circle-wallet-client";
 import { getApplications, getContractsForWallet, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
+import { contractsForWallet, loadPublicMarketplaceContracts } from "@/lib/marketplace-chain";
 
 const WALLET_KEY = "arc-browser-wallet";
 
@@ -23,10 +24,21 @@ export default function ProfilePage() {
       try { address = (JSON.parse(saved) as { address?: string }).address ?? ""; } catch { /* ignore malformed session */ }
     }
     setWallet(address);
-    if (address) {
-      setContracts(getContractsForWallet(address));
-      setApplications(getApplications().filter((application) => application.applicant.trim().toLowerCase() === address.trim().toLowerCase()));
-    }
+    if (!address) return;
+
+    const localContracts = getContractsForWallet(address);
+    setContracts(localContracts);
+    setApplications(getApplications().filter((application) => application.applicant.trim().toLowerCase() === address.trim().toLowerCase()));
+
+    let cancelled = false;
+    void loadPublicMarketplaceContracts()
+      .then((publicContracts) => {
+        if (!cancelled) setContracts(contractsForWallet(address, publicContracts, localContracts));
+      })
+      .catch(() => {
+        // Keep locally-created jobs visible when the public RPC is temporarily unavailable.
+      });
+    return () => { cancelled = true; };
   }, []);
 
   const active = useMemo(() => applications.filter((application) => application.status === "Selected" || application.status === "Completed"), [applications]);

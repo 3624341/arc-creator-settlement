@@ -5,7 +5,7 @@ import { Shell } from "@/components/Shell";
 import { StatCard } from "@/components/StatCard";
 import { ContractCard, LocalContract } from "@/components/ContractCard";
 import { RecentReceipts } from "@/components/RecentReceipts";
-import { loadPublicMarketplaceContracts, mergeMarketplaceContracts } from "@/lib/marketplace-chain";
+import { loadPublicMarketplaceContracts, mergeMarketplaceContracts, sumContractTotals } from "@/lib/marketplace-chain";
 
 const fallback: LocalContract[] = [
   { id: "demo-1", title: "Tokyo Skincare Campaign", creator: "0xA3b2D9386b5DCC9A7366E9985F913D7fE827D4E0", totalUsdc: "1000", status: "Funded" },
@@ -39,7 +39,7 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const total = contracts.reduce((sum, c) => sum + Number(c.totalUsdc || 0), 0);
+  const total = sumContractTotals(contracts);
 
   return (
     <Shell>
