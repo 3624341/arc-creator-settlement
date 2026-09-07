@@ -11,6 +11,7 @@ const navigation = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard#receipts", label: "Receipts" },
   { href: "/wallet", label: "Circle Wallet" },
+  { href: "/profile", label: "My Page" },
 ];
 const BROWSER_WALLET_STORAGE = "arc-browser-wallet";
 
@@ -59,7 +60,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       await ensureArcNetwork(provider);
       const { account } = await getWalletClient(provider);
       setWallet(account);
-      localStorage.setItem(BROWSER_WALLET_STORAGE, JSON.stringify({ name }));
+      localStorage.setItem(BROWSER_WALLET_STORAGE, JSON.stringify({ name, address: account }));
       setConnectOpen(false);
       setBrowserWalletOpen(false);
     } catch (error) {
