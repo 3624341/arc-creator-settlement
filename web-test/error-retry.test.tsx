@@ -28,4 +28,7 @@ test("contract actions expose classified errors and retry", () => {
   assert.match(create, /eth_accounts/);
   assert.match(create, /setWalletMode\("browser"\)/);
   assert.match(create, /walletMode === "browser" && !account/);
+  assert.match(create, /resolveBrowserProvider/);
+  assert.match(create, /ensureArcNetwork\(provider\)/);
+  assert.match(create, /getWalletClient\(provider\)/);
 });

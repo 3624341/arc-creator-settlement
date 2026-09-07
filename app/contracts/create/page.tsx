@@ -21,6 +21,7 @@ export default function CreateContractPage() {
   const router = useRouter();
   const [account, setAccount] = useState<string>();
   const [walletMode, setWalletMode] = useState<WalletMode>("circle");
+  const [browserWalletName, setBrowserWalletName] = useState<BrowserWalletName>();
   const [hasCircleSession, setHasCircleSession] = useState(false);
   const [title, setTitle] = useState("Tokyo Skincare Campaign");
   const [creator, setCreator] = useState("0xA3b2D9386b5DCC9A7366E9985F913D7fE827D4E0");
@@ -45,6 +46,7 @@ export default function CreateContractPage() {
     try {
       const wallet = JSON.parse(stored) as { name?: BrowserWalletName; address?: string };
       if (!wallet.name) return;
+      setBrowserWalletName(wallet.name);
       const provider = resolveBrowserProvider(wallet.name);
       void provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
         const address = accounts[0] ?? wallet.address;
@@ -61,9 +63,13 @@ export default function CreateContractPage() {
   const total = milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0);
 
   async function connectBrowser() {
-    await ensureArcNetwork();
-    const { account } = await getWalletClient();
+    const stored = JSON.parse(localStorage.getItem(BROWSER_WALLET_STORAGE) ?? "null") as { name?: BrowserWalletName } | null;
+    const name = stored?.name ?? "metamask";
+    const provider = resolveBrowserProvider(name);
+    await ensureArcNetwork(provider);
+    const { account } = await getWalletClient(provider);
     setAccount(account);
+    setBrowserWalletName(name);
     setWalletMode("browser");
   }
 
@@ -133,8 +139,11 @@ export default function CreateContractPage() {
       }
 
       setStatus("Connecting browser wallet...");
-      await ensureArcNetwork();
-      const { walletClient, account } = await getWalletClient();
+      const name = browserWalletName ?? (JSON.parse(localStorage.getItem(BROWSER_WALLET_STORAGE) ?? "null") as { name?: BrowserWalletName } | null)?.name;
+      if (!name) throw new Error("Connect a browser wallet from the top-right menu first.");
+      const provider = resolveBrowserProvider(name);
+      await ensureArcNetwork(provider);
+      const { walletClient, account } = await getWalletClient(provider);
       setAccount(account);
       const hash = await walletClient.writeContract({
         address: ESCROW_FACTORY_ADDRESS,

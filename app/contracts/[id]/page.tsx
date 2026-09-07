@@ -7,7 +7,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Shell } from "@/components/Shell";
 import { Button } from "@/components/Button";
 import { erc20Abi, escrowAbi } from "@/lib/abi";
-import { ensureArcNetwork, getPublicClient, getWalletClient } from "@/lib/browser-wallet";
+import { ensureArcNetwork, getPublicClient, getWalletClient, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import { ARC_USDC_ADDRESS, txUrl } from "@/lib/arc";
 import { formatUsdc, parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
@@ -166,8 +166,11 @@ export default function ContractDetailPage() {
 
   async function browserEscrow() {
     if (!address) throw new Error("No escrow address. Create and confirm an onchain escrow first.");
-    await ensureArcNetwork();
-    const { walletClient, account } = await getWalletClient();
+    const stored = JSON.parse(localStorage.getItem("arc-browser-wallet") ?? "null") as { name?: BrowserWalletName } | null;
+    if (!stored?.name) throw new Error("Connect a browser wallet from the top-right menu first.");
+    const provider = resolveBrowserProvider(stored.name);
+    await ensureArcNetwork(provider);
+    const { walletClient, account } = await getWalletClient(provider);
     return { walletClient, account, escrow: address as `0x${string}` };
   }
 
