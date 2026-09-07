@@ -1,14 +1,8 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import type { LocalContract } from "@/lib/marketplace-store";
 
-export type LocalContract = {
-  id: string;
-  title: string;
-  escrowAddress?: string;
-  creator: string;
-  totalUsdc: string;
-  status: "Draft" | "Pending onchain" | "Created" | "Funded" | "Completed";
-};
+export type { LocalContract } from "@/lib/marketplace-store";
 
 export function ContractCard({ contract }: { contract: LocalContract }) {
   return (
@@ -36,4 +30,3 @@ export function ContractCard({ contract }: { contract: LocalContract }) {
     </div>
   );
 }
-

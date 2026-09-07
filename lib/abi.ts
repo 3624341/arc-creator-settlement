@@ -31,6 +31,20 @@ export const erc20Abi = [
 export const factoryAbi = [
   {
     type: "function",
+    name: "escrowCount",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "escrows",
+    inputs: [{ name: "", type: "uint256" }],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view"
+  },
+  {
+    type: "function",
     name: "createEscrow",
     inputs: [
       { name: "creator", type: "address" },
@@ -56,6 +70,13 @@ export const factoryAbi = [
 ] as const;
 
 export const escrowAbi = [
+  {
+    type: "function",
+    name: "status",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
+    stateMutability: "view"
+  },
   {
     type: "event",
     name: "PaymentReleased",

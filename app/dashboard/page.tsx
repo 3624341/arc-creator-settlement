@@ -5,6 +5,7 @@ import { Shell } from "@/components/Shell";
 import { StatCard } from "@/components/StatCard";
 import { ContractCard, LocalContract } from "@/components/ContractCard";
 import { RecentReceipts } from "@/components/RecentReceipts";
+import { loadPublicMarketplaceContracts, mergeMarketplaceContracts } from "@/lib/marketplace-chain";
 
 const fallback: LocalContract[] = [
   { id: "demo-1", title: "Tokyo Skincare Campaign", creator: "0xA3b2D9386b5DCC9A7366E9985F913D7fE827D4E0", totalUsdc: "1000", status: "Funded" },
@@ -15,8 +16,27 @@ export default function DashboardPage() {
   const [contracts, setContracts] = useState<LocalContract[]>(fallback);
 
   useEffect(() => {
-    const raw = localStorage.getItem("arc-settlement-contracts");
-    if (raw) setContracts(JSON.parse(raw));
+    let cancelled = false;
+    async function loadContracts() {
+      let localContracts: LocalContract[] = [];
+      try {
+        const raw = localStorage.getItem("arc-settlement-contracts");
+        const parsed: unknown = raw ? JSON.parse(raw) : [];
+        localContracts = Array.isArray(parsed) ? parsed as LocalContract[] : [];
+      } catch {
+        localContracts = [];
+      }
+
+      if (localContracts.length && !cancelled) setContracts(localContracts);
+      try {
+        const publicContracts = await loadPublicMarketplaceContracts();
+        if (!cancelled) setContracts(mergeMarketplaceContracts(publicContracts, localContracts));
+      } catch {
+        // Keep the local view available when the public RPC is temporarily unavailable.
+      }
+    }
+    void loadContracts();
+    return () => { cancelled = true; };
   }, []);
 
   const total = contracts.reduce((sum, c) => sum + Number(c.totalUsdc || 0), 0);

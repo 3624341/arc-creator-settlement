@@ -9,6 +9,7 @@ import {
   type LocalContract,
   type StorageLike
 } from "../lib/marketplace-store";
+import { loadPublicMarketplaceContracts, mergeMarketplaceContracts } from "../lib/marketplace-chain";
 
 class MemoryStorage implements StorageLike {
   private values = new Map<string, string>();
@@ -84,4 +85,45 @@ test("legacy contracts remain visible when owner metadata was not persisted", ()
   const persistedLegacy = { ...legacy };
   delete persistedLegacy.advertiser;
   assert.deepEqual(getContractsForWallet(advertiser.toLowerCase(), storage), [persistedLegacy]);
+});
+
+test("public chain contracts remain visible when the browser has no local records", () => {
+  const publicContract: LocalContract = {
+    id: "0xescrow",
+    escrowAddress: "0xescrow",
+    title: "Create and Publish Content About Arc Network",
+    creator: advertiser,
+    advertiser,
+    totalUsdc: "50",
+    status: "Created"
+  };
+
+  assert.deepEqual(mergeMarketplaceContracts([publicContract], []), [publicContract]);
+});
+
+test("loads public contracts from the deployed factory registry", async () => {
+  const escrow = "0x1111111111111111111111111111111111111111";
+  const fakeClient = {
+    readContract: async ({ functionName }: { functionName: string }) => {
+      if (functionName === "escrowCount") return 1n;
+      if (functionName === "escrows") return escrow;
+      if (functionName === "title") return "Create and Publish Content About Arc Network";
+      if (functionName === "creator") return advertiser;
+      if (functionName === "client") return advertiser;
+      if (functionName === "totalAmount") return 50_000_000n;
+      if (functionName === "status") return 0;
+      throw new Error(`Unexpected read: ${functionName}`);
+    }
+  };
+
+  assert.deepEqual(await loadPublicMarketplaceContracts(fakeClient as never), [{
+    id: escrow,
+    escrowAddress: escrow,
+    title: "Create and Publish Content About Arc Network",
+    creator: advertiser,
+    advertiser,
+    owner: advertiser,
+    totalUsdc: "50",
+    status: "Created"
+  }]);
 });
