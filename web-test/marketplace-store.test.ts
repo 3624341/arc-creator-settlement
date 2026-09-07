@@ -75,3 +75,13 @@ test("wallet matching is case insensitive for owner and contract filtering", () 
   assert.equal(isWalletOwner(advertiser.toLowerCase(), contract), true);
   assert.deepEqual(getContractsForWallet(advertiser.toLowerCase(), storage), [contract]);
 });
+
+test("legacy contracts remain visible when owner metadata was not persisted", () => {
+  const storage = new MemoryStorage();
+  const legacy = { ...contract, advertiser: undefined, creator: advertiser };
+  storage.setItem("arc-settlement-contracts", JSON.stringify([legacy]));
+
+  const persistedLegacy = { ...legacy };
+  delete persistedLegacy.advertiser;
+  assert.deepEqual(getContractsForWallet(advertiser.toLowerCase(), storage), [persistedLegacy]);
+});

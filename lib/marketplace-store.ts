@@ -90,7 +90,15 @@ function readContracts(storage: StorageLike | undefined): LocalContract[] {
 }
 
 export function getContractsForWallet(wallet: string, storage: StorageLike | undefined = defaultStorage()): LocalContract[] {
-  return readContracts(storage).filter((contract) => isWalletOwner(wallet, contract));
+  return readContracts(storage).filter((contract) => {
+    if (isWalletOwner(wallet, contract)) return true;
+    // Contracts created before advertiser/owner was persisted can only be
+    // recovered from the legacy creator field. Keep this fallback limited to
+    // records without an explicit owner so new creator recipients are not
+    // mistaken for advertisers.
+    const hasExplicitOwner = Boolean(contract.advertiser || contract.owner || contract.client);
+    return !hasExplicitOwner && normalizeWallet(contract.creator) === normalizeWallet(wallet);
+  });
 }
 
 export function saveApplication(application: JobApplication, options: SaveOptions = {}): SaveApplicationResult {
