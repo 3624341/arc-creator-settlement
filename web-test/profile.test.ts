@@ -9,5 +9,8 @@ test("profile page exposes wallet workspace sections", () => {
   assert.match(page, /My Applications/);
   assert.match(page, /Active Work/);
   assert.match(page, /Connect a wallet/);
+  assert.match(page, /Delete/);
+  assert.match(page, /Hide/);
+  assert.match(page, /window\.confirm/);
   assert.match(shell, /My Page/);
 });

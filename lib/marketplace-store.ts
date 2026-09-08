@@ -1,5 +1,6 @@
 export const CONTRACTS_STORAGE_KEY = "arc-settlement-contracts";
 export const APPLICATIONS_STORAGE_KEY = "arc-job-applications";
+export const HIDDEN_CONTRACTS_STORAGE_KEY = "arc-hidden-contracts";
 
 export type ApplicationStatus = "Applied" | "Selected" | "Rejected" | "Completed";
 
@@ -53,6 +54,14 @@ function readArray<T>(storage: StorageLike | undefined, key: string): T[] {
   }
 }
 
+function contractStorageId(contract: Pick<LocalContract, "id" | "escrowAddress">) {
+  return (contract.escrowAddress ?? contract.id).trim().toLowerCase();
+}
+
+function hiddenContractKey(wallet: string, contract: Pick<LocalContract, "id" | "escrowAddress">) {
+  return `${normalizeWallet(wallet)}:${contractStorageId(contract)}`;
+}
+
 function normalizeWallet(wallet: string | undefined) {
   return typeof wallet === "string" ? wallet.trim().toLowerCase() : "";
 }
@@ -99,6 +108,34 @@ export function getContractsForWallet(wallet: string, storage: StorageLike | und
     const hasExplicitOwner = Boolean(contract.advertiser || contract.owner || contract.client);
     return !hasExplicitOwner && normalizeWallet(contract.creator) === normalizeWallet(wallet);
   });
+}
+
+export function deleteLocalContract(contract: LocalContract, storage: StorageLike | undefined = defaultStorage()) {
+  if (!storage) return false;
+  try {
+    const remaining = readContracts(storage).filter((candidate) => candidate.id !== contract.id);
+    storage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(remaining));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function hideContractForWallet(wallet: string, contract: LocalContract, storage: StorageLike | undefined = defaultStorage()) {
+  if (!storage || !normalizeWallet(wallet)) return false;
+  try {
+    const hidden = readArray<unknown>(storage, HIDDEN_CONTRACTS_STORAGE_KEY).filter((value): value is string => typeof value === "string");
+    const key = hiddenContractKey(wallet, contract);
+    storage.setItem(HIDDEN_CONTRACTS_STORAGE_KEY, JSON.stringify([...new Set([...hidden, key])]));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function isContractHidden(wallet: string, contract: LocalContract, storage: StorageLike | undefined = defaultStorage()) {
+  if (!storage || !normalizeWallet(wallet)) return false;
+  return readArray<unknown>(storage, HIDDEN_CONTRACTS_STORAGE_KEY).some((value) => value === hiddenContractKey(wallet, contract));
 }
 
 export function saveApplication(application: JobApplication, options: SaveOptions = {}): SaveApplicationResult {

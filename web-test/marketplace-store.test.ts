@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  deleteLocalContract,
   getApplications,
   getContractsForWallet,
+  hideContractForWallet,
+  isContractHidden,
   isWalletOwner,
   saveApplication,
   type JobApplication,
@@ -90,6 +93,26 @@ test("legacy contracts remain visible when owner metadata was not persisted", ()
   const persistedLegacy = { ...legacy };
   delete persistedLegacy.advertiser;
   assert.deepEqual(getContractsForWallet(advertiser.toLowerCase(), storage), [persistedLegacy]);
+});
+
+test("deletes a local pending contract without touching other contracts", () => {
+  const storage = new MemoryStorage();
+  const pending = { ...contract, id: "pending-1", escrowAddress: undefined };
+  storage.setItem("arc-settlement-contracts", JSON.stringify([pending, contract]));
+
+  assert.equal(deleteLocalContract(pending, storage), true);
+  assert.deepEqual(getContractsForWallet(advertiser, storage), [contract]);
+});
+
+test("hides an onchain contract for one wallet without deleting its record", () => {
+  const storage = new MemoryStorage();
+  const onchain = { ...contract, id: "0x1111111111111111111111111111111111111111", escrowAddress: "0x1111111111111111111111111111111111111111" };
+  storage.setItem("arc-settlement-contracts", JSON.stringify([onchain]));
+
+  assert.equal(hideContractForWallet(advertiser, onchain, storage), true);
+  assert.equal(isContractHidden(advertiser, onchain, storage), true);
+  assert.equal(isContractHidden(applicant, onchain, storage), false);
+  assert.deepEqual(getContractsForWallet(advertiser, storage), [onchain]);
 });
 
 test("public chain contracts remain visible when the browser has no local records", () => {
