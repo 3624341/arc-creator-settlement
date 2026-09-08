@@ -26,5 +26,20 @@ test("browser wallet writes include explicit gas for OKX", () => {
 
 test("contract detail explains when a local record has no deployed escrow", () => {
   assert.match(source, /Escrow address is missing/);
-  assert.match(source, /disabled=\{demoMode \|\| !address\}/);
+  assert.match(source, /!address/);
+});
+
+test("contract detail gates actions by onchain client and creator roles", () => {
+  assert.match(source, /clientAddress/);
+  assert.match(source, /isClient/);
+  assert.match(source, /isCreator/);
+  assert.match(source, /Only the advertiser can approve or deposit/);
+  assert.match(source, /Only the assigned creator can submit/);
+});
+
+test("contract detail disables USDC approval after allowance is sufficient", () => {
+  assert.match(source, /allowance/);
+  assert.match(source, /usdcApproved/);
+  assert.match(source, /Approved/);
+  assert.match(source, /Approval complete/);
 });

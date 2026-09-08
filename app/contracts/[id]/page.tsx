@@ -30,6 +30,9 @@ export default function ContractDetailPage() {
   const [walletMode, setWalletMode] = useState<WalletMode>("circle");
   const [hasCircleSession, setHasCircleSession] = useState(false);
   const [creatorAddress, setCreatorAddress] = useState<string>();
+  const [clientAddress, setClientAddress] = useState<string>();
+  const [escrowStatus, setEscrowStatus] = useState<number>();
+  const [usdcAllowance, setUsdcAllowance] = useState<bigint>();
   const [pendingRelease, setPendingRelease] = useState<number>();
   const [receiptHashes, setReceiptHashes] = useState<Record<number, string>>({});
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -129,10 +132,12 @@ export default function ContractDetailPage() {
       try {
         const publicClient = getPublicClient();
         const escrow = address as `0x${string}`;
-        const [onchainTitle, count, onchainCreator] = await Promise.all([
+        const [onchainTitle, count, onchainCreator, onchainClient, onchainStatus] = await Promise.all([
           publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "title" }),
           publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "milestoneCount" }),
-          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "creator" })
+          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "creator" }),
+          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "client" }),
+          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "status" })
         ]);
         const rows: Milestone[] = [];
         for (let i = 0n; i < count; i++) {
@@ -147,6 +152,8 @@ export default function ContractDetailPage() {
         if (!cancelled) {
           setTitle(onchainTitle);
           setCreatorAddress(onchainCreator);
+          setClientAddress(onchainClient);
+          setEscrowStatus(Number(onchainStatus));
           setMilestones(rows);
         }
       } catch (error) {
@@ -163,6 +170,41 @@ export default function ContractDetailPage() {
   const paidCount = milestones.filter((m) => m.status === "Paid").length;
   const pendingCount = milestones.filter((m) => m.status === "Pending").length;
   const progress = total > 0 ? Math.round((paid / total) * 100) : 0;
+  const isClient = Boolean(walletAddress && clientAddress && walletAddress.toLowerCase() === clientAddress.toLowerCase());
+  const isCreator = Boolean(walletAddress && creatorAddress && walletAddress.toLowerCase() === creatorAddress.toLowerCase());
+  const requiredAllowance = parseUsdc(String(total));
+  const usdcApproved = requiredAllowance > 0n && usdcAllowance !== undefined && usdcAllowance >= requiredAllowance;
+  const isFunded = escrowStatus === 1;
+
+  async function refreshUsdcAllowance() {
+    if (!address || !walletAddress || total <= 0) return;
+    const allowance = await getPublicClient().readContract({
+      address: ARC_USDC_ADDRESS,
+      abi: erc20Abi,
+      functionName: "allowance",
+      args: [walletAddress as `0x${string}`, address as `0x${string}`]
+    });
+    setUsdcAllowance(allowance as bigint);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!address || !walletAddress || total <= 0) {
+      setUsdcAllowance(undefined);
+      return () => { cancelled = true; };
+    }
+    void getPublicClient().readContract({
+      address: ARC_USDC_ADDRESS,
+      abi: erc20Abi,
+      functionName: "allowance",
+      args: [walletAddress as `0x${string}`, address as `0x${string}`]
+    }).then((allowance) => {
+      if (!cancelled) setUsdcAllowance(allowance as bigint);
+    }).catch(() => {
+      if (!cancelled) setUsdcAllowance(undefined);
+    });
+    return () => { cancelled = true; };
+  }, [address, walletAddress, total]);
 
   async function browserEscrow() {
     if (!address) throw new Error("No escrow address. Create and confirm an onchain escrow first.");
@@ -186,16 +228,23 @@ export default function ContractDetailPage() {
     setErrorMessage(undefined); setRetryAction(() => () => void approveDeposit());
     try {
       if (!address) throw new Error("Escrow address missing.");
+      if (!isClient) throw new Error("Only the advertiser can approve or deposit.");
+      if (usdcApproved) return;
       if (walletMode === "circle") {
         await circleExec(ARC_USDC_ADDRESS, "approve(address,uint256)", [address, parseUsdc(String(total)).toString()]);
+        await refreshUsdcAllowance();
         return;
       }
       const { walletClient, account, escrow } = await browserEscrow();
       setStatus("Approving USDC allowance...");
-      const gas = await getPublicClient().estimateContractGas({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account });
+      const publicClient = getPublicClient();
+      const gas = await publicClient.estimateContractGas({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account });
       const tx = await walletClient.writeContract({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account, gas });
       setHash(tx);
-      setStatus("USDC approval submitted.");
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+      if (receipt.status !== "success") throw new Error("USDC approval transaction reverted on Arc.");
+      await refreshUsdcAllowance();
+      setStatus("Approval complete. The approval button is now disabled.");
     } catch (error) { setErrorMessage(explainError(error, "Approval failed")); setStatus("Approval failed"); }
   }
 
@@ -203,8 +252,11 @@ export default function ContractDetailPage() {
     setErrorMessage(undefined); setRetryAction(() => () => void deposit());
     try {
       if (!address) throw new Error("Escrow address missing.");
+      if (!isClient) throw new Error("Only the advertiser can approve or deposit.");
+      if (isFunded) return;
       if (walletMode === "circle") {
         await circleExec(address, "deposit()", []);
+        setEscrowStatus(1);
         return;
       }
       const { walletClient, account, escrow } = await browserEscrow();
@@ -212,7 +264,10 @@ export default function ContractDetailPage() {
       const gas = await getPublicClient().estimateContractGas({ address: escrow, abi: escrowAbi, functionName: "deposit", account });
       const tx = await walletClient.writeContract({ address: escrow, abi: escrowAbi, functionName: "deposit", account, gas });
       setHash(tx);
-      setStatus("Deposit submitted.");
+      const receipt = await getPublicClient().waitForTransactionReceipt({ hash: tx });
+      if (receipt.status !== "success") throw new Error("Deposit transaction reverted on Arc.");
+      setEscrowStatus(1);
+      setStatus("Deposit confirmed. The escrow is funded.");
     } catch (error) { setErrorMessage(explainError(error, "Deposit failed")); setStatus("Deposit failed"); }
   }
 
@@ -220,6 +275,8 @@ export default function ContractDetailPage() {
     setErrorMessage(undefined); setRetryAction(() => () => void submitMilestone(index));
     try {
       if (!address) throw new Error("Escrow address missing.");
+      if (!isCreator) throw new Error("Only the assigned creator can submit.");
+      if (!isFunded) throw new Error("The advertiser must deposit funds before milestones can be submitted.");
       if (walletMode === "circle") {
         await circleExec(address, "submitMilestone(uint256)", [String(index)]);
       } else {
@@ -238,6 +295,7 @@ export default function ContractDetailPage() {
     setPendingRelease(index);
     try {
       if (!address) throw new Error("Escrow address missing.");
+      if (!isClient) throw new Error("Only the advertiser can release milestones.");
       if (!creatorAddress) throw new Error("Creator address is still loading. Try again shortly.");
       const publicClient = getPublicClient();
       let transactionHash: `0x${string}` | undefined;
@@ -322,9 +380,13 @@ export default function ContractDetailPage() {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button disabled={demoMode || !address} onClick={approveDeposit}>Approve USDC</Button>
-          <Button disabled={demoMode || !address} className="bg-arc-lime text-arc-ink" onClick={deposit}>Deposit to escrow</Button>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {isClient ? <>
+            <Button disabled={demoMode || !address || usdcApproved} onClick={approveDeposit}>{usdcApproved ? "Approved" : "Approve USDC"}</Button>
+            <Button disabled={demoMode || !address || isFunded} className="bg-arc-lime text-arc-ink" onClick={deposit}>{isFunded ? "Funded" : "Deposit to escrow"}</Button>
+          </> : <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Only the advertiser can approve or deposit.</p>}
+          {isCreator && !isClient ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Creator wallet connected. Submit milestones after the advertiser funds the escrow.</p> : null}
+          {!isClient && !isCreator ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Connect the advertiser or assigned creator wallet to manage this escrow.</p> : null}
         </div>
         {!address ? <div role="alert" className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">Escrow address is missing. This local record was saved before deployment completed. Return to Create Contract and create the escrow again.</div> : null}
         <div className="mt-8 space-y-4">
@@ -335,10 +397,11 @@ export default function ContractDetailPage() {
               <p className="font-black">{m.amount} USDC</p>
               <span className="w-fit rounded-full bg-arc-bg px-3 py-1 text-xs font-black">{m.status}</span>
               <div className="flex gap-2">
-                <Button disabled={demoMode} className="px-4 py-2" onClick={() => submitMilestone(index)}>Submit</Button>
-                <Button disabled={demoMode || pendingRelease === index} className="bg-arc-purple px-4 py-2" onClick={() => approveRelease(index)}>
+                {isCreator ? <Button disabled={demoMode || !isFunded || m.status !== "Pending"} className="px-4 py-2" onClick={() => submitMilestone(index)}>Submit</Button> : null}
+                {isClient ? <Button disabled={demoMode || pendingRelease === index || !isFunded || m.status !== "Submitted"} className="bg-arc-purple px-4 py-2" onClick={() => approveRelease(index)}>
                   {pendingRelease === index ? "Confirming…" : "Release"}
-                </Button>
+                </Button> : null}
+                {!isCreator && !isClient ? <span className="text-sm font-semibold text-arc-muted">Role required</span> : null}
                 {receiptHashes[index] ? (
                   <Link href={`/receipt/${receiptHashes[index]}`} className="inline-flex items-center gap-1 rounded-full bg-arc-lime px-4 py-2 text-sm font-black text-arc-ink">
                     Receipt <ArrowUpRight size={15} aria-hidden="true" />
