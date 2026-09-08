@@ -12,5 +12,7 @@ test("profile page exposes wallet workspace sections", () => {
   assert.match(page, /Delete/);
   assert.match(page, /Hide/);
   assert.match(page, /window\.confirm/);
+  assert.match(page, /items-center gap-3/);
+  assert.match(page, /shrink-0.*totalUsdc/);
   assert.match(shell, /My Page/);
 });

@@ -43,3 +43,9 @@ test("contract detail disables USDC approval after allowance is sufficient", () 
   assert.match(source, /Approved/);
   assert.match(source, /Approval complete/);
 });
+
+test("contract detail restores the application for the current wallet", () => {
+  assert.match(source, /getApplicationForWallet/);
+  assert.match(source, /localContract\?\.escrowAddress/);
+  assert.match(source, /params\.id/);
+});

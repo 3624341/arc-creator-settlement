@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   deleteLocalContract,
+  getApplicationForWallet,
   getApplications,
   getContractsForWallet,
   hideContractForWallet,
@@ -113,6 +114,23 @@ test("hides an onchain contract for one wallet without deleting its record", () 
   assert.equal(isContractHidden(advertiser, onchain, storage), true);
   assert.equal(isContractHidden(applicant, onchain, storage), false);
   assert.deepEqual(getContractsForWallet(advertiser, storage), [onchain]);
+});
+
+test("restores an application for the connected wallet across contract id aliases", () => {
+  const storage = new MemoryStorage();
+  const application: JobApplication = {
+    id: "application-1",
+    contractId: "0xABCDEF0000000000000000000000000000000001",
+    applicant: applicant.toUpperCase(),
+    status: "Applied",
+    appliedAt: "2026-09-08T00:00:00.000Z"
+  };
+  storage.setItem("arc-job-applications", JSON.stringify([application]));
+
+  assert.deepEqual(
+    getApplicationForWallet(applicant, ["pending-local-id", "0xabcdef0000000000000000000000000000000001"], storage),
+    application
+  );
 });
 
 test("public chain contracts remain visible when the browser has no local records", () => {

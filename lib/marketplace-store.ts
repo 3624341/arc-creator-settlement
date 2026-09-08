@@ -87,6 +87,15 @@ export function getApplications(storage: StorageLike | undefined = defaultStorag
     .filter((application): application is JobApplication => Boolean(application));
 }
 
+export function getApplicationForWallet(wallet: string, contractIds: string[], storage: StorageLike | undefined = defaultStorage()) {
+  const normalizedWallet = normalizeWallet(wallet);
+  const normalizedIds = new Set(contractIds.filter(Boolean).map((id) => id.trim().toLowerCase()));
+  if (!normalizedWallet || normalizedIds.size === 0) return undefined;
+  return getApplications(storage).find((application) =>
+    normalizeWallet(application.applicant) === normalizedWallet && normalizedIds.has(application.contractId.trim().toLowerCase())
+  );
+}
+
 export function isWalletOwner(wallet: string, contract: Pick<LocalContract, "advertiser" | "owner" | "client" | "creator">): boolean {
   const normalizedWallet = normalizeWallet(wallet);
   if (!normalizedWallet) return false;

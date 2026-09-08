@@ -12,7 +12,7 @@ import { ARC_USDC_ADDRESS, txUrl } from "@/lib/arc";
 import { formatUsdc, parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import { findCircleReleaseTransaction, requestReceiptIndex, saveRecentReceipt } from "@/lib/receipts/client";
-import { getApplications, isWalletOwner, saveApplication, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
+import { getApplicationForWallet, isWalletOwner, saveApplication, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
 type WalletMode = "circle" | "browser";
@@ -65,10 +65,7 @@ export default function ContractDetailPage() {
       contracts = [];
     }
     const found = contracts.find((c: any) => c.id === params.id || c.escrowAddress === params.id);
-    if (found) {
-      setLocalContract(found);
-      setApplication(getApplications().find((candidate) => candidate.contractId === found.id));
-    }
+    if (found) setLocalContract(found);
     if (!circle?.address) {
       try {
         const browserWallet = JSON.parse(localStorage.getItem("arc-browser-wallet") ?? "null") as { name?: string } | null;
@@ -84,6 +81,12 @@ export default function ContractDetailPage() {
     if (found?.title) setTitle(found.title);
     if (candidate) setAddress(candidate);
   }, [params.id]);
+
+  useEffect(() => {
+    if (!walletAddress) return;
+    const contractIds = [params.id, localContract?.id, localContract?.escrowAddress].filter((value): value is string => Boolean(value));
+    setApplication(getApplicationForWallet(walletAddress, contractIds));
+  }, [walletAddress, params.id, localContract?.id, localContract?.escrowAddress]);
 
   const isOwner = Boolean(walletAddress && (localContract
     ? isWalletOwner(walletAddress, localContract)
