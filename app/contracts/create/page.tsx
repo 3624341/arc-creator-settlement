@@ -10,6 +10,7 @@ import { ESCROW_FACTORY_ADDRESS } from "@/lib/arc";
 import { parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import type { LocalContract } from "@/lib/marketplace-store";
+import { getEscrowAddressFromCreatedLogs } from "@/lib/escrow-deployment";
 
 const emptyMilestone = { description: "", amount: "" };
 type MilestoneInput = typeof emptyMilestone;
@@ -177,8 +178,20 @@ export default function CreateContractPage() {
         account,
         gas,
       });
-      saveLocal();
-      router.push(`/dashboard?created=1&tx=${hash}`);
+      setStatus("Escrow transaction submitted. Waiting for Arc confirmation...");
+      const publicClient = getPublicClient();
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") throw new Error("Escrow creation transaction reverted on Arc.");
+      const createdLogs = await publicClient.getLogs({
+        address: ESCROW_FACTORY_ADDRESS,
+        event: factoryAbi.find((item) => item.type === "event" && item.name === "EscrowCreated") as any,
+        fromBlock: receipt.blockNumber,
+        toBlock: receipt.blockNumber
+      });
+      const escrowAddress = getEscrowAddressFromCreatedLogs(createdLogs);
+      if (!escrowAddress) throw new Error("Escrow is confirmed, but Arc has not indexed its address yet. Refresh and try again shortly.");
+      saveLocal(escrowAddress);
+      router.push(`/contracts/${escrowAddress}?created=1&tx=${hash}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Create escrow failed");
     }

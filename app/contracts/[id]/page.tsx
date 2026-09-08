@@ -323,9 +323,10 @@ export default function ContractDetailPage() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button disabled={demoMode} onClick={approveDeposit}>Approve USDC</Button>
-          <Button disabled={demoMode} className="bg-arc-lime text-arc-ink" onClick={deposit}>Deposit to escrow</Button>
+          <Button disabled={demoMode || !address} onClick={approveDeposit}>Approve USDC</Button>
+          <Button disabled={demoMode || !address} className="bg-arc-lime text-arc-ink" onClick={deposit}>Deposit to escrow</Button>
         </div>
+        {!address ? <div role="alert" className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">Escrow address is missing. This local record was saved before deployment completed. Return to Create Contract and create the escrow again.</div> : null}
         <div className="mt-8 space-y-4">
           {milestones.length === 0 ? <div className="rounded-3xl border border-arc-line bg-white p-5 text-arc-muted">Onchain milestones will appear after the escrow address is confirmed.</div> : null}
           {milestones.map((m, index) => (

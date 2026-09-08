@@ -23,3 +23,8 @@ test("creator application respects demo mode and hides the action for owners", (
 test("browser wallet writes include explicit gas for OKX", () => {
   assert.match(source, /estimateContractGas/);
 });
+
+test("contract detail explains when a local record has no deployed escrow", () => {
+  assert.match(source, /Escrow address is missing/);
+  assert.match(source, /disabled=\{demoMode \|\| !address\}/);
+});
