@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { createPublicClient, http, verifyMessage } from "viem";
 import { arcTestnet, ARC_RPC_URL } from "@/lib/arc";
 import { escrowAbi } from "@/lib/abi";
+import { buildApplicationSigningMessage } from "@/lib/creator-profile-signing";
+import { isProfileComplete } from "@/lib/creator-profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +17,7 @@ type ApplicationRow = {
   status: "Applied" | "Selected" | "Rejected" | "Completed";
   applied_at: string;
   updated_at: string;
+  profile_version: number | null;
 };
 
 function backend() {
@@ -31,7 +34,8 @@ function toApplication(row: ApplicationRow) {
     applicant: row.applicant_wallet,
     status: row.status,
     appliedAt: row.applied_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
+    profileVersion: row.profile_version
   };
 }
 
@@ -48,7 +52,7 @@ export async function GET(request: Request) {
   if (!contractIds.length && !applicant) return Response.json({ enabled: true, applications: [] });
   if (applicant && !addressPattern.test(applicant)) return Response.json({ error: "INVALID_APPLICANT_WALLET" }, { status: 400 });
 
-  let query = client.from("job_applications").select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at").order("applied_at", { ascending: false });
+  let query = client.from("job_applications").select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at,profile_version").order("applied_at", { ascending: false });
   if (contractIds.length) query = query.in("contract_id", contractIds);
   if (applicant) query = query.eq("applicant_wallet", applicant.toLowerCase());
   const { data, error } = await query.limit(100);
@@ -65,10 +69,32 @@ export async function POST(request: Request) {
   const escrowAddress = typeof body?.escrowAddress === "string" ? body.escrowAddress.trim() : null;
   const message = typeof body?.message === "string" ? body.message : "";
   const signature = typeof body?.signature === "string" ? body.signature : "";
-  const expectedMessage = `Arc Creator Settlement application\nContract: ${contractId}\nApplicant: ${applicant}`;
-  if (!contractId || !applicant || !addressPattern.test(applicant) || (escrowAddress && !addressPattern.test(escrowAddress)) || message !== expectedMessage || !/^0x[0-9a-fA-F]+$/.test(signature)) {
+  const requestedProfileVersion = body?.profileVersion;
+  if (!contractId || !applicant || !addressPattern.test(applicant) || (escrowAddress && !addressPattern.test(escrowAddress)) || !Number.isInteger(requestedProfileVersion) || !/^0x[0-9a-fA-F]+$/.test(signature)) {
     return Response.json({ error: "INVALID_APPLICATION" }, { status: 400 });
   }
+  if (addressPattern.test(contractId)) {
+    try {
+      const publicClient = createPublicClient({ chain: arcTestnet, transport: http(ARC_RPC_URL) });
+      const clientAddress = await publicClient.readContract({ address: contractId as `0x${string}`, abi: escrowAbi, functionName: "client" });
+      if (String(clientAddress).toLowerCase() === applicant) return Response.json({ error: "CONTRACT_OWNER_CANNOT_APPLY" }, { status: 409 });
+    } catch {
+      return Response.json({ error: "ESCROW_UNAVAILABLE" }, { status: 404 });
+    }
+  }
+  const profileResult = await client.from("creator_profiles").select("wallet_address,display_name,headline,bio,avatar_url,country_code,languages,roles,skills,preferred_campaigns,availability,typical_turnaround_days,social_links,portfolio_items,is_public,profile_version,created_at,updated_at").eq("wallet_address", applicant).eq("is_public", true).maybeSingle();
+  if (profileResult.error) return Response.json({ error: "APPLICATIONS_UNAVAILABLE" }, { status: 503 });
+  if (!profileResult.data || profileResult.data.profile_version !== requestedProfileVersion || !isProfileComplete({
+    displayName: profileResult.data.display_name,
+    bio: profileResult.data.bio,
+    roles: profileResult.data.roles,
+    languages: profileResult.data.languages,
+    socialLinks: profileResult.data.social_links,
+    portfolioItems: profileResult.data.portfolio_items,
+    isPublic: profileResult.data.is_public,
+  })) return Response.json({ error: profileResult.data ? "PROFILE_VERSION_MISMATCH" : "INCOMPLETE_CREATOR_PROFILE" }, { status: 422 });
+  const expectedMessage = buildApplicationSigningMessage({ contractId, applicant, profileVersion: requestedProfileVersion as number });
+  if (message !== expectedMessage) return Response.json({ error: "INVALID_APPLICATION" }, { status: 400 });
   let verified = false;
   try {
     verified = await verifyMessage({ address: applicant as `0x${string}`, message, signature: signature as `0x${string}` });
@@ -76,13 +102,17 @@ export async function POST(request: Request) {
     verified = false;
   }
   if (!verified) return Response.json({ error: "APPLICATION_SIGNATURE_INVALID" }, { status: 401 });
-  const { data, error } = await client.from("job_applications").upsert({
+  const existing = await client.from("job_applications").select("id").eq("contract_id", contractId).eq("applicant_wallet", applicant).maybeSingle();
+  if (existing.error) return Response.json({ error: "APPLICATIONS_UNAVAILABLE" }, { status: 503 });
+  if (existing.data) return Response.json({ error: "DUPLICATE_APPLICATION" }, { status: 409 });
+  const { data, error } = await client.from("job_applications").insert({
     contract_id: contractId,
     escrow_address: escrowAddress,
     applicant_wallet: applicant,
     status: "Applied",
+    profile_version: requestedProfileVersion,
     updated_at: new Date().toISOString()
-  }, { onConflict: "contract_id,applicant_wallet", ignoreDuplicates: false }).select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at").single();
+  }).select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at,profile_version").single();
   if (error) {
     if (error.code === "23505") return Response.json({ error: "DUPLICATE_APPLICATION" }, { status: 409 });
     return Response.json({ error: "APPLICATION_SAVE_FAILED" }, { status: 503 });
@@ -121,7 +151,7 @@ export async function PATCH(request: Request) {
   if (onchainCreator !== applicant) return Response.json({ error: "CREATOR_ASSIGNMENT_NOT_CONFIRMED" }, { status: 409 });
 
   const target = await client.from("job_applications")
-    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at")
+    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at,profile_version")
     .eq("contract_id", contractId)
     .eq("applicant_wallet", applicant)
     .maybeSingle();
@@ -132,7 +162,7 @@ export async function PATCH(request: Request) {
   if (targetApplication.status !== "Applied") return Response.json({ error: "APPLICATION_NOT_SELECTABLE" }, { status: 409 });
 
   const selected = await client.from("job_applications")
-    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at")
+    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at,profile_version")
     .eq("contract_id", contractId)
     .eq("status", "Selected")
     .limit(1);
@@ -143,7 +173,7 @@ export async function PATCH(request: Request) {
     .update({ status: "Selected", updated_at: new Date().toISOString() })
     .eq("id", targetApplication.id)
     .eq("status", "Applied")
-    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at")
+    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at,profile_version")
     .single();
   if (updated.error) return Response.json({ error: "APPLICATION_SELECTION_FAILED" }, { status: 503 });
   return Response.json({ enabled: true, application: toApplication(updated.data as ApplicationRow), client: onchainClient }, { headers: { "Cache-Control": "no-store" } });

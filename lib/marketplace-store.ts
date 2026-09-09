@@ -10,6 +10,7 @@ export type JobApplication = {
   applicant: string;
   status: ApplicationStatus;
   appliedAt: string;
+  profileVersion?: number | null;
 };
 
 export type LocalContract = {
@@ -79,7 +80,8 @@ function normalizeApplication(value: unknown): JobApplication | undefined {
     contractId: record.contractId,
     applicant: record.applicant,
     status,
-    appliedAt: record.appliedAt
+    appliedAt: record.appliedAt,
+    ...(typeof record.profileVersion === "number" ? { profileVersion: record.profileVersion } : {})
   };
 }
 

@@ -1,6 +1,6 @@
 import type { JobApplication } from "./marketplace-store";
 
-export type RemoteApplication = JobApplication & { escrowAddress?: string | null; updatedAt?: string };
+export type RemoteApplication = JobApplication & { escrowAddress?: string | null; updatedAt?: string; profileVersion?: number | null };
 
 async function request(path: string, init?: RequestInit) {
   const response = await fetch(path, { ...init, cache: "no-store", headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
@@ -17,7 +17,7 @@ export async function listRemoteApplications(input: { applicant?: string; contra
   return { enabled: body.enabled === true, applications: Array.isArray(body.applications) ? body.applications as RemoteApplication[] : [] };
 }
 
-export async function createRemoteApplication(input: { contractId: string; applicant: string; escrowAddress?: string; message: string; signature: string }) {
+export async function createRemoteApplication(input: { contractId: string; applicant: string; escrowAddress?: string; message: string; signature: string; profileVersion: number }) {
   const body = await request("/api/applications", { method: "POST", body: JSON.stringify(input) });
   return { enabled: body.enabled === true, application: body.application as RemoteApplication };
 }
