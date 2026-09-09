@@ -20,6 +20,8 @@ export type LocalContract = {
   owner?: string;
   client?: string;
   totalUsdc: string;
+  /** Current USDC held by a deployed escrow, when read from chain. */
+  escrowBalanceUsdc?: string;
   status: string;
   escrowAddress?: string;
   applications?: JobApplication[];
@@ -100,6 +102,10 @@ export function isWalletOwner(wallet: string, contract: Pick<LocalContract, "adv
   const normalizedWallet = normalizeWallet(wallet);
   if (!normalizedWallet) return false;
   return [contract.advertiser, contract.owner, contract.client].some((owner) => normalizeWallet(owner) === normalizedWallet);
+}
+
+export function isWalletCreator(wallet: string, contract: Pick<LocalContract, "creator">): boolean {
+  return normalizeWallet(wallet) !== "" && normalizeWallet(contract.creator) === normalizeWallet(wallet);
 }
 
 function readContracts(storage: StorageLike | undefined): LocalContract[] {

@@ -55,6 +55,8 @@ export default function WalletPage() {
     localStorage.setItem("circle-wallet-address", arcWallet.address);
     const key = encryptionKey ?? login?.encryptionKey;
     if (key) saveCircleSession({ userToken, encryptionKey: key, walletId: arcWallet.id, address: arcWallet.address });
+    localStorage.setItem("arc-wallet-mode", "circle");
+    window.dispatchEvent(new CustomEvent("arc-wallet-changed", { detail: { address: arcWallet.address, mode: "circle" } }));
     const balances = await api("getTokenBalance", { userToken, walletId: arcWallet.id });
     const tokenBalances = balances.tokenBalances ?? [];
     const usdc = tokenBalances.find((item: any) => item?.token?.symbol?.startsWith("USDC"));

@@ -7,6 +7,7 @@ import {
   getContractsForWallet,
   hideContractForWallet,
   isContractHidden,
+  isWalletCreator,
   isWalletOwner,
   saveApplication,
   type JobApplication,
@@ -17,6 +18,7 @@ import {
   contractsForWallet,
   loadPublicMarketplaceContracts,
   mergeMarketplaceContracts,
+  sumEscrowBalances,
   sumContractTotals
 } from "../lib/marketplace-chain";
 
@@ -84,6 +86,12 @@ test("wallet matching is case insensitive for owner and contract filtering", () 
 
   assert.equal(isWalletOwner(advertiser.toLowerCase(), contract), true);
   assert.deepEqual(getContractsForWallet(advertiser.toLowerCase(), storage), [contract]);
+});
+
+test("creator wallets can recover assigned public escrows", () => {
+  const assigned = { ...contract, id: "0xassigned", escrowAddress: "0xassigned", advertiser, creator: applicant };
+  assert.equal(isWalletCreator(applicant.toLowerCase(), assigned), true);
+  assert.deepEqual(contractsForWallet(applicant.toLowerCase(), [assigned], []), [assigned]);
 });
 
 test("legacy contracts remain visible when owner metadata was not persisted", () => {
@@ -164,6 +172,12 @@ test("wallet workspace includes public contracts created by the connected wallet
 
 test("sums formatted public contract totals without producing NaN", () => {
   assert.equal(sumContractTotals([{ totalUsdc: "50" }, { totalUsdc: "1,000" }]), 1050);
+});
+
+test("sums only known onchain escrow balances", () => {
+  const result = sumEscrowBalances([{ escrowBalanceUsdc: "0.1" }, { escrowBalanceUsdc: "1" }, {}]);
+  assert.equal(result.known, 2);
+  assert.equal(result.value, 1_100_000n);
 });
 
 test("loads public contracts from the deployed factory registry", async () => {

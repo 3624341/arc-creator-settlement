@@ -8,6 +8,7 @@ import { factoryAbi } from "@/lib/abi";
 import { ensureArcNetwork, getPublicClient, getWalletClient, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import { ESCROW_FACTORY_ADDRESS } from "@/lib/arc";
 import { parseUsdc } from "@/lib/format";
+import { validateContractDraft } from "@/lib/contract-validation";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import type { LocalContract } from "@/lib/marketplace-store";
 import { getEscrowAddressFromCreatedLogs } from "@/lib/escrow-deployment";
@@ -75,7 +76,28 @@ export default function CreateContractPage() {
     }
   }, []);
 
-  const total = milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0);
+  useEffect(() => {
+    function handleWalletChange(event: Event) {
+      const detail = (event as CustomEvent<{ address?: string; name?: BrowserWalletName; mode?: WalletMode }>).detail;
+      if (detail.mode === "browser") {
+        setWalletMode("browser");
+        setAccount(detail.address);
+        if (detail.name) setBrowserWalletName(detail.name);
+      } else if (detail.mode === "circle") {
+        setWalletMode("circle");
+        setAccount(detail.address);
+      } else if (detail.mode === "disconnected") {
+        setAccount(undefined);
+      }
+    }
+    window.addEventListener("arc-wallet-changed", handleWalletChange);
+    return () => window.removeEventListener("arc-wallet-changed", handleWalletChange);
+  }, []);
+
+  const total = milestones.reduce((sum, m) => {
+    const amount = Number(m.amount);
+    return Number.isFinite(amount) ? sum + amount : sum;
+  }, 0);
 
   async function connectBrowser() {
     const stored = JSON.parse(localStorage.getItem(BROWSER_WALLET_STORAGE) ?? "null") as { name?: BrowserWalletName } | null;
@@ -86,6 +108,7 @@ export default function CreateContractPage() {
     setAccount(account);
     setBrowserWalletName(name);
     setWalletMode("browser");
+    localStorage.setItem("arc-wallet-mode", "browser");
   }
 
   function updateMilestone(index: number, key: keyof MilestoneInput, value: string) {
@@ -112,8 +135,8 @@ export default function CreateContractPage() {
   async function createOnchain() {
     try {
       if (!ESCROW_FACTORY_ADDRESS) throw new Error("Factory is not deployed yet. Circle Contracts deployment must be completed first.");
-      if (!/^0x[a-fA-F0-9]{40}$/.test(creator)) throw new Error("Enter a valid creator wallet address.");
-      if (milestones.some((m) => !m.description.trim() || Number(m.amount) <= 0)) throw new Error("Every milestone needs a description and positive USDC amount.");
+      const validationError = validateContractDraft(title, creator, milestones);
+      if (validationError) throw new Error(validationError);
 
       if (walletMode === "circle") {
         const session = getCircleSession();
@@ -210,17 +233,17 @@ export default function CreateContractPage() {
           </div>
 
           <div className="mt-6 flex gap-2 rounded-2xl bg-arc-bg p-2">
-            <button onClick={() => setWalletMode("circle")} className={`rounded-xl px-4 py-2 text-sm font-black ${walletMode === "circle" ? "bg-white shadow-sm" : "text-arc-muted"}`}>Circle Wallet</button>
-            <button onClick={() => setWalletMode("browser")} className={`rounded-xl px-4 py-2 text-sm font-black ${walletMode === "browser" ? "bg-white shadow-sm" : "text-arc-muted"}`}>Browser Wallet</button>
+            <button onClick={() => { setWalletMode("circle"); localStorage.setItem("arc-wallet-mode", "circle"); }} className={`rounded-xl px-4 py-2 text-sm font-black ${walletMode === "circle" ? "bg-white shadow-sm" : "text-arc-muted"}`}>Circle Wallet</button>
+            <button onClick={() => { setWalletMode("browser"); localStorage.setItem("arc-wallet-mode", "browser"); }} className={`rounded-xl px-4 py-2 text-sm font-black ${walletMode === "browser" ? "bg-white shadow-sm" : "text-arc-muted"}`}>Browser Wallet</button>
             {walletMode === "circle" && !hasCircleSession ? <a href="/wallet" className="ml-auto rounded-xl px-4 py-2 text-sm font-black text-arc-purple">Set up Circle wallet →</a> : null}
           </div>
 
           <div className="mt-8 grid gap-5">
             <label className="grid gap-2 font-bold">Project title
-              <input className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <input aria-label="Project title" required className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" value={title} onChange={(e) => setTitle(e.target.value)} />
             </label>
             <label className="grid gap-2 font-bold">Creator wallet
-              <input className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" value={creator} onChange={(e) => setCreator(e.target.value)} />
+              <input aria-label="Creator wallet address" required className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" value={creator} onChange={(e) => setCreator(e.target.value)} />
             </label>
             <div className="grid gap-3">
               <div className="flex items-center justify-between">
@@ -229,8 +252,8 @@ export default function CreateContractPage() {
               </div>
               {milestones.map((m, index) => (
                 <div key={index} className="grid gap-3 rounded-3xl border border-arc-line bg-arc-bg p-4 md:grid-cols-[1fr_10rem_auto]">
-                  <input className="rounded-2xl border border-arc-line bg-white px-4 py-3" placeholder="Milestone description" value={m.description} onChange={(e) => updateMilestone(index, "description", e.target.value)} />
-                  <input className="rounded-2xl border border-arc-line bg-white px-4 py-3" placeholder="USDC" inputMode="decimal" value={m.amount} onChange={(e) => updateMilestone(index, "amount", e.target.value)} />
+                  <input aria-label={`Milestone ${index + 1} description`} className="rounded-2xl border border-arc-line bg-white px-4 py-3" placeholder="Milestone description" value={m.description} onChange={(e) => updateMilestone(index, "description", e.target.value)} />
+                  <input aria-label={`Milestone ${index + 1} amount in USDC`} className="rounded-2xl border border-arc-line bg-white px-4 py-3" placeholder="USDC" inputMode="decimal" value={m.amount} onChange={(e) => updateMilestone(index, "amount", e.target.value)} />
                   <button type="button" className="rounded-2xl border border-red-200 px-4 py-3 text-sm font-black text-red-600 hover:bg-red-50" onClick={() => setMilestones((current) => current.filter((_, i) => i !== index))}>Remove</button>
                 </div>
               ))}
