@@ -1,0 +1,6 @@
+import type { CreatorProfile, CreatorVerification } from "@/lib/creator-profile";
+import { CreatorVerificationBadges } from "./CreatorVerificationBadges";
+
+export function ApplicationProfilePreview({ profile, verification }: { profile: CreatorProfile; verification: CreatorVerification }) {
+  return <div className="rounded-2xl border border-arc-line bg-arc-bg p-4"><p className="text-sm font-bold uppercase tracking-[0.16em] text-arc-muted">Application preview</p><p className="mt-2 text-xl font-black">{profile.displayName}</p>{profile.headline ? <p className="mt-1 text-sm text-arc-muted">{profile.headline}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{profile.roles.map((role) => <span key={role} className="rounded-full bg-white px-2 py-1 text-xs font-bold">{role}</span>)}{profile.languages.map((language) => <span key={language} className="rounded-full bg-white px-2 py-1 text-xs font-bold">{language}</span>)}</div><p className="mt-3 text-sm text-arc-muted">{profile.socialLinks.length} public social link{profile.socialLinks.length === 1 ? "" : "s"} · {profile.portfolioItems.length} portfolio item{profile.portfolioItems.length === 1 ? "" : "s"} · Profile version {profile.profileVersion}</p><CreatorVerificationBadges verification={verification} /></div>;
+}

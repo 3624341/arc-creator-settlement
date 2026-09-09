@@ -14,6 +14,10 @@ import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-w
 import { findCircleReleaseTransaction, requestReceiptIndex, saveRecentReceipt } from "@/lib/receipts/client";
 import { getApplicationForWallet, isWalletOwner, saveApplication, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
 import { createRemoteApplication, listRemoteApplications } from "@/lib/marketplace-remote";
+import { getRemoteProfile } from "@/lib/creator-profile-remote";
+import { buildApplicationSigningMessage } from "@/lib/creator-profile-signing";
+import { isProfileComplete, type CreatorProfile, type CreatorVerification } from "@/lib/creator-profile";
+import { ApplicationProfilePreview } from "@/components/ApplicationProfilePreview";
 import { zeroAddress } from "viem";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
@@ -44,6 +48,9 @@ export default function ContractDetailPage() {
   const [localContract, setLocalContract] = useState<LocalContract>();
   const [application, setApplication] = useState<JobApplication>();
   const [applicationFeedback, setApplicationFeedback] = useState<string>();
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile>();
+  const [creatorVerification, setCreatorVerification] = useState<CreatorVerification>();
+  const [showApplicationPreview, setShowApplicationPreview] = useState(false);
 
   function explainError(error: unknown, fallback: string) {
     const message = error instanceof Error ? error.message : fallback;
@@ -112,6 +119,11 @@ export default function ContractDetailPage() {
     return () => { cancelled = true; };
   }, [walletAddress, params.id, localContract?.id, localContract?.escrowAddress]);
 
+  useEffect(() => {
+    if (!walletAddress) return;
+    void getRemoteProfile(walletAddress).then((result) => { setCreatorProfile(result.profile); setCreatorVerification(result.verification); }).catch(() => { setCreatorProfile(undefined); setCreatorVerification(undefined); });
+  }, [walletAddress]);
+
   const isOwner = Boolean(walletAddress && (localContract
     ? isWalletOwner(walletAddress, localContract)
     : clientAddress && walletAddress.toLowerCase() === clientAddress.toLowerCase()));
@@ -134,13 +146,23 @@ export default function ContractDetailPage() {
       setApplicationFeedback("Application already submitted.");
       return;
     }
+    if (!creatorProfile || !isProfileComplete(creatorProfile)) {
+      setApplicationFeedback("Complete your Creator Passport before applying.");
+      return;
+    }
+    if (!showApplicationPreview) {
+      setShowApplicationPreview(true);
+      return;
+    }
+    setShowApplicationPreview(false);
     const contractId = localContract?.id ?? params.id;
     const next: JobApplication = {
       id: `application-${contractId}-${walletAddress.toLowerCase()}`,
       contractId,
       applicant: walletAddress,
       status: "Applied",
-      appliedAt: new Date().toISOString()
+      appliedAt: new Date().toISOString(),
+      profileVersion: creatorProfile.profileVersion
     };
     let applicationMessage = "";
     let applicationSignature = "";
@@ -149,7 +171,7 @@ export default function ContractDetailPage() {
         const stored = JSON.parse(localStorage.getItem("arc-browser-wallet") ?? "null") as { name?: BrowserWalletName } | null;
         if (!stored?.name) throw new Error("Connect a browser wallet before applying.");
         const provider = resolveBrowserProvider(stored.name);
-        applicationMessage = `Arc Creator Settlement application\nContract: ${contractId}\nApplicant: ${walletAddress.toLowerCase()}`;
+        applicationMessage = buildApplicationSigningMessage({ contractId, applicant: walletAddress, profileVersion: creatorProfile.profileVersion });
         applicationSignature = await provider.request({ method: "personal_sign", params: [applicationMessage, walletAddress] });
       } catch (error) {
         setApplicationFeedback(error instanceof Error ? error.message : "Wallet signature was cancelled. No application was saved.");
@@ -165,7 +187,7 @@ export default function ContractDetailPage() {
     setApplication(result.application);
     try {
       if (!applicationSignature) throw new Error("Circle wallet applications use local fallback until a signing method is configured.");
-      const remote = await createRemoteApplication({ contractId, applicant: walletAddress, escrowAddress: localContract?.escrowAddress ?? (/^0x[a-fA-F0-9]{40}$/.test(params.id) ? params.id : undefined), message: applicationMessage, signature: applicationSignature });
+      const remote = await createRemoteApplication({ contractId, applicant: walletAddress, escrowAddress: localContract?.escrowAddress ?? (/^0x[a-fA-F0-9]{40}$/.test(params.id) ? params.id : undefined), message: applicationMessage, signature: applicationSignature, profileVersion: creatorProfile.profileVersion });
       if (remote.application) setApplication(remote.application);
       setApplicationFeedback(remote.enabled
         ? "Application submitted. The advertiser can now review your profile."
@@ -447,6 +469,7 @@ export default function ContractDetailPage() {
           {walletMode === "circle" && !hasCircleSession ? <a href="/wallet" className="ml-auto rounded-xl px-4 py-2 text-sm font-black text-arc-purple">Set up Circle wallet →</a> : null}
         </div>
         {demoMode ? <div className="mt-4 rounded-2xl border border-arc-lime/50 bg-arc-lime/20 p-4 text-sm font-bold text-arc-ink">Public demo mode is read-only. The milestone state and receipt below are loaded from Arc Testnet.</div> : null}
+        {showApplicationPreview && creatorProfile && creatorVerification ? <div className="mt-4 rounded-3xl border border-arc-line bg-white p-5"><ApplicationProfilePreview profile={creatorProfile} verification={creatorVerification} /><div className="mt-4 flex flex-wrap gap-3"><Button type="button" onClick={handleApply}>Sign application</Button><button type="button" onClick={() => setShowApplicationPreview(false)} className="min-h-11 rounded-full border border-arc-line px-4 py-2 text-sm font-black">Cancel</button></div></div> : null}
 
         <div className="mt-4 rounded-3xl border border-arc-line bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
