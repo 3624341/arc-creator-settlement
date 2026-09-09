@@ -10,6 +10,7 @@ cache
 coverage
 *.log
 recovery/
+.worktrees/
 
 .vercel
 .env*
