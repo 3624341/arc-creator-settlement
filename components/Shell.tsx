@@ -13,6 +13,7 @@ const navigation = [
   { href: "/profile", label: "My Page" },
 ];
 const BROWSER_WALLET_STORAGE = "arc-browser-wallet";
+const WALLET_MODE_STORAGE = "arc-wallet-mode";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -60,6 +61,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
       const { account } = await getWalletClient(provider);
       setWallet(account);
       localStorage.setItem(BROWSER_WALLET_STORAGE, JSON.stringify({ name, address: account }));
+      localStorage.setItem(WALLET_MODE_STORAGE, "browser");
+      window.dispatchEvent(new CustomEvent("arc-wallet-changed", { detail: { address: account, name, mode: "browser" } }));
       setConnectOpen(false);
       setBrowserWalletOpen(false);
     } catch (error) {
@@ -80,24 +83,40 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span className="block whitespace-nowrap text-xl font-black">Creator Settlement</span>
           </span>
         </Link>
-        <nav className="ml-5 hidden shrink-0 items-center gap-2 border-l border-arc-line pl-5 text-sm font-semibold md:flex">
+        <nav className="ml-5 hidden shrink-0 items-center gap-2 border-l border-arc-line pl-5 text-sm font-semibold lg:flex">
           {navigation.map((item) => <Link key={item.href} href={item.href} className={`rounded-xl px-3 py-2 transition-colors ${active(item.href) ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>{item.label}</Link>)}
           <Link href="/contracts/create" className={`rounded-xl px-4 py-2 transition-colors ${active("/contracts/create") ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>Create Contract</Link>
           <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-xl px-3 py-2 hover:bg-white">
             ArcScan <ArrowUpRight size={15} />
           </a>
         </nav>
-        <details className="group md:hidden">
+        <details className="group lg:hidden" onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.currentTarget.removeAttribute("open");
+            (event.currentTarget.querySelector("summary") as HTMLElement | null)?.focus();
+          }
+        }}>
           <summary className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full bg-arc-ink text-white" aria-label="Open navigation"><Menu size={19} /></summary>
           <nav className="absolute left-4 right-4 top-[4.75rem] grid gap-2 rounded-2xl border border-arc-line bg-white p-3 text-sm font-black shadow-xl">
             {navigation.map((item) => <Link key={item.href} href={item.href} className={`rounded-xl px-4 py-3 hover:bg-arc-bg ${active(item.href) ? "bg-arc-lime text-arc-ink" : ""}`}>{item.label}</Link>)}
             <Link href="/contracts/create" className={`rounded-xl px-4 py-3 ${active("/contracts/create") ? "bg-arc-lime text-arc-ink" : "text-arc-ink hover:bg-arc-bg"}`}>Create Contract</Link>
             <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-xl px-4 py-3 hover:bg-arc-bg">ArcScan <ArrowUpRight size={15} /></a>
+            <div className="mt-1 border-t border-arc-line pt-2">
+              <p className="px-4 py-2 text-xs font-black uppercase tracking-wider text-arc-muted">Wallet</p>
+              {wallet ? <p className="px-4 py-2 text-sm font-bold text-arc-ink">{wallet.slice(0, 6)}…{wallet.slice(-4)}</p> : null}
+              <button type="button" onClick={() => setBrowserWalletOpen((open) => !open)} aria-expanded={browserWalletOpen} className="w-full rounded-xl px-4 py-3 text-left font-black hover:bg-arc-bg">{wallet ? "Change browser wallet" : "Connect browser wallet"}</button>
+              {browserWalletOpen ? <div className="grid gap-1 px-2 pb-2">
+                {(["metamask", "okx", "rabby", "coinbase"] as BrowserWalletName[]).map((name) => <button key={name} type="button" onClick={() => void connectBrowser(name)} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-arc-bg">{name === "metamask" ? "MetaMask" : name === "okx" ? "OKX Wallet" : name === "rabby" ? "Rabby Wallet" : "Coinbase Wallet"}</button>)}
+              </div> : null}
+              <Link href="/wallet" className="block rounded-xl px-4 py-3 font-black hover:bg-arc-bg">Circle Wallet</Link>
+              {connectError ? <p role="alert" className="mx-4 mb-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-5 text-red-700">{connectError}</p> : null}
+              {wallet ? <button type="button" onClick={() => { clearCircleSession(); localStorage.removeItem(BROWSER_WALLET_STORAGE); localStorage.removeItem(WALLET_MODE_STORAGE); setWallet(undefined); setBrowserWalletOpen(false); window.dispatchEvent(new CustomEvent("arc-wallet-changed", { detail: { address: undefined, mode: "disconnected" } })); }} className="w-full rounded-xl px-4 py-3 text-left text-sm font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}
+            </div>
           </nav>
         </details>
-        <div className="relative ml-auto mr-3 hidden md:block">
+        <div className="relative ml-auto mr-3 hidden lg:block">
           <button onClick={() => setConnectOpen((open) => !open)} className={`rounded-full px-4 py-2 text-sm font-black ${wallet ? "bg-arc-lime text-arc-ink" : "border border-arc-line bg-white"}`}>{wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "Connect Wallet"}</button>
-          {connectOpen ? <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl border border-arc-line bg-white p-3 shadow-xl"><p className="px-3 pb-2 text-xs font-black uppercase tracking-wider text-arc-muted">Choose wallet</p><button onClick={() => setBrowserWalletOpen((open) => !open)} className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold hover:bg-arc-bg">Browser Wallet<span className="block text-xs font-normal text-arc-muted">Choose MetaMask, OKX, Rabby, or Coinbase</span></button>{browserWalletOpen ? <div className="mt-1 grid gap-1 rounded-xl bg-arc-bg/70 p-2"><button onClick={() => void connectBrowser("metamask")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">MetaMask</button><button onClick={() => void connectBrowser("okx")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">OKX Wallet</button><button onClick={() => void connectBrowser("rabby")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Rabby Wallet</button><button onClick={() => void connectBrowser("coinbase")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Coinbase Wallet</button></div> : null}<Link href="/wallet" onClick={() => setConnectOpen(false)} className="mt-1 block rounded-xl px-3 py-3 text-sm font-bold hover:bg-arc-bg">Circle Wallet<span className="block text-xs font-normal text-arc-muted">User-owned wallet</span></Link>{connectError ? <p role="alert" className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-5 text-red-700">{connectError}</p> : null}{wallet ? <button onClick={() => { clearCircleSession(); localStorage.removeItem(BROWSER_WALLET_STORAGE); setWallet(undefined); setConnectOpen(false); }} className="mt-1 w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}</div> : null}
+          {connectOpen ? <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl border border-arc-line bg-white p-3 shadow-xl"><p className="px-3 pb-2 text-xs font-black uppercase tracking-wider text-arc-muted">Choose wallet</p><button onClick={() => setBrowserWalletOpen((open) => !open)} aria-expanded={browserWalletOpen} className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold hover:bg-arc-bg">Browser Wallet<span className="block text-xs font-normal text-arc-muted">Choose MetaMask, OKX, Rabby, or Coinbase</span></button>{browserWalletOpen ? <div className="mt-1 grid gap-1 rounded-xl bg-arc-bg/70 p-2"><button onClick={() => void connectBrowser("metamask")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">MetaMask</button><button onClick={() => void connectBrowser("okx")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">OKX Wallet</button><button onClick={() => void connectBrowser("rabby")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Rabby Wallet</button><button onClick={() => void connectBrowser("coinbase")} className="rounded-lg px-3 py-2 text-left text-sm font-bold hover:bg-white">Coinbase Wallet</button></div> : null}<Link href="/wallet" onClick={() => setConnectOpen(false)} className="mt-1 block rounded-xl px-3 py-3 text-sm font-bold hover:bg-arc-bg">Circle Wallet<span className="block text-xs font-normal text-arc-muted">User-owned wallet</span></Link>{connectError ? <p role="alert" className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-5 text-red-700">{connectError}</p> : null}{wallet ? <button onClick={() => { clearCircleSession(); localStorage.removeItem(BROWSER_WALLET_STORAGE); localStorage.removeItem(WALLET_MODE_STORAGE); setWallet(undefined); setConnectOpen(false); window.dispatchEvent(new CustomEvent("arc-wallet-changed", { detail: { address: undefined, mode: "disconnected" } })); }} className="mt-1 w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}</div> : null}
         </div>
       </header>
       {children}

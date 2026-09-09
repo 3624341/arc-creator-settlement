@@ -5,15 +5,14 @@ import { Shell } from "@/components/Shell";
 import { StatCard } from "@/components/StatCard";
 import { ContractCard, LocalContract } from "@/components/ContractCard";
 import { RecentReceipts } from "@/components/RecentReceipts";
-import { loadPublicMarketplaceContracts, mergeMarketplaceContracts, sumContractTotals } from "@/lib/marketplace-chain";
-
-const fallback: LocalContract[] = [
-  { id: "demo-1", title: "Tokyo Skincare Campaign", creator: "0xA3b2D9386b5DCC9A7366E9985F913D7fE827D4E0", totalUsdc: "1000", status: "Funded" },
-  { id: "demo-2", title: "Seoul Fashion Shoot", creator: "0xF44fBaa68Cf596A3050f8FCD78A314C4904D9878", totalUsdc: "750", status: "Created" }
-];
+import { loadPublicMarketplaceContracts, mergeMarketplaceContracts, sumEscrowBalances } from "@/lib/marketplace-chain";
+import { formatUsdcExact } from "@/lib/format";
 
 export default function DashboardPage() {
-  const [contracts, setContracts] = useState<LocalContract[]>(fallback);
+  const [contracts, setContracts] = useState<LocalContract[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string>();
+  const [stale, setStale] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,16 +29,26 @@ export default function DashboardPage() {
       if (localContracts.length && !cancelled) setContracts(localContracts);
       try {
         const publicContracts = await loadPublicMarketplaceContracts();
-        if (!cancelled) setContracts(mergeMarketplaceContracts(publicContracts, localContracts));
-      } catch {
-        // Keep the local view available when the public RPC is temporarily unavailable.
+        if (!cancelled) {
+          setContracts(mergeMarketplaceContracts(publicContracts, localContracts));
+          setLoadError(undefined);
+          setStale(false);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setStale(localContracts.length > 0);
+          setLoadError(error instanceof Error ? "Arc public data is temporarily unavailable. Retry to refresh." : "Arc public data is temporarily unavailable. Retry to refresh.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
     void loadContracts();
     return () => { cancelled = true; };
   }, []);
 
-  const total = sumContractTotals(contracts);
+  const balances = sumEscrowBalances(contracts);
+  const totalEscrowed = balances.known > 0 ? `${formatUsdcExact(balances.value)} USDC` : "—";
 
   return (
     <Shell>
@@ -47,15 +56,21 @@ export default function DashboardPage() {
         <p className="text-sm font-bold uppercase tracking-[0.22em] text-arc-muted">Dashboard</p>
         <h1 className="mt-2 text-5xl font-black tracking-tight">Settlement overview</h1>
       </div>
+      {loading ? <div role="status" className="mb-6 rounded-2xl bg-arc-bg p-4 text-sm font-semibold text-arc-muted">Loading public Arc contracts…</div> : null}
+      {loadError ? <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700"><span>{loadError}{stale ? " Showing the last locally known records; balances may be stale." : ""}</span><button className="rounded-full bg-red-700 px-4 py-2 text-xs font-black text-white" onClick={() => window.location.reload()}>Retry</button></div> : null}
       <section className="grid gap-4 md:grid-cols-4">
         <StatCard label="Active contracts" value={String(contracts.length)} />
-        <StatCard label="Total escrowed" value={`${total.toLocaleString()} USDC`} />
+        <StatCard label="USDC held in escrow" value={totalEscrowed} caption={balances.known ? `${balances.known} deployed escrow balance${balances.known === 1 ? "" : "s"}` : "Waiting for Arc balance data"} />
         <StatCard label="Circle products" value="3" caption="USDC · Wallets · Contracts" />
         <StatCard label="Network" value="Arc" caption="Testnet MVP" />
       </section>
       <section className="mt-8 grid gap-5 md:grid-cols-2">
         {contracts.map((contract) => <ContractCard key={contract.id} contract={contract} />)}
       </section>
+      {!loading && !loadError && contracts.length === 0 ? <section className="mt-8 rounded-3xl border border-arc-line bg-white p-8 text-center">
+        <h2 className="text-2xl font-black">No public contracts yet</h2>
+        <p className="mt-2 text-sm text-arc-muted">Create a contract to publish the first Arc settlement opportunity.</p>
+      </section> : null}
       <RecentReceipts />
     </Shell>
   );

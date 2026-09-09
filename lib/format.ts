@@ -11,6 +11,13 @@ export function formatUsdc(value: bigint) {
   return Number(formatted).toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
+export function formatUsdcExact(value: bigint) {
+  const formatted = formatUnits(value, USDC_DECIMALS);
+  const [whole, fraction = ""] = formatted.split(".");
+  const trimmed = fraction.replace(/0+$/, "");
+  return trimmed ? `${whole}.${trimmed}` : whole;
+}
+
 export function shortenAddress(address?: string) {
   if (!address) return "Not connected";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
