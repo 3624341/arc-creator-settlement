@@ -19,7 +19,7 @@ test("dashboard exposes the verified public demo", () => {
   assert.match(create, /router\.push/);
   assert.match(create, /arc-create-contract-draft/);
   assert.match(create, /useState\(""\)/);
-  assert.match(create, /advertiser: account \?\? creator/);
+  assert.match(create, /advertiser: account/);
   assert.match(create, />Remove<\/button>/);
   assert.match(contract, /demoMode/);
   assert.match(contract, /read-only/);

@@ -140,6 +140,18 @@ Run `supabase/schema.sql` in your Supabase project to create the public receipt 
 
 The public can read confirmed receipts and application records. Only the server can write, and the server verifies Arc receipt data before every receipt upsert. If Supabase is unavailable, the UI keeps localStorage as an offline fallback for development; it will not provide cross-browser sharing.
 
+### Creator selection flow
+
+Creator assignment is optional when a job is created:
+
+1. The advertiser creates an escrow with the Creator wallet field left blank.
+2. A creator connects a different wallet, opens the job, and signs **Apply as creator**.
+3. The advertiser opens **My Page → Applications received** and selects one applicant.
+4. The advertiser signs the on-chain `assignCreator(address)` transaction. The selected wallet becomes the escrow payout recipient and the application changes to `Selected`.
+5. Only after assignment can the advertiser approve USDC and deposit funds. The selected creator can then submit milestones.
+
+This flow requires the factory to be deployed from the current `MilestoneEscrow.sol` bytecode. Existing escrows keep their original creator; redeploy the factory before creating new unassigned jobs.
+
 ## Verification
 
 ```bash

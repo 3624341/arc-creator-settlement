@@ -27,6 +27,7 @@ export interface MilestoneEscrowInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "approveAndRelease"
+      | "assignCreator"
       | "cancelBeforeFunding"
       | "client"
       | "creator"
@@ -45,6 +46,7 @@ export interface MilestoneEscrowInterface extends Interface {
     nameOrSignatureOrTopic:
       | "ContractCancelled"
       | "ContractCompleted"
+      | "CreatorAssigned"
       | "FundsDeposited"
       | "MilestoneApproved"
       | "MilestoneSubmitted"
@@ -54,6 +56,10 @@ export interface MilestoneEscrowInterface extends Interface {
   encodeFunctionData(
     functionFragment: "approveAndRelease",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "assignCreator",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "cancelBeforeFunding",
@@ -88,6 +94,10 @@ export interface MilestoneEscrowInterface extends Interface {
 
   decodeFunctionResult(
     functionFragment: "approveAndRelease",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "assignCreator",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -141,6 +151,19 @@ export namespace ContractCompletedEvent {
   export interface OutputObject {
     escrow: string;
     totalReleased: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CreatorAssignedEvent {
+  export type InputTuple = [client: AddressLike, creator: AddressLike];
+  export type OutputTuple = [client: string, creator: string];
+  export interface OutputObject {
+    client: string;
+    creator: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -267,6 +290,12 @@ export interface MilestoneEscrow extends BaseContract {
     "nonpayable"
   >;
 
+  assignCreator: TypedContractMethod<
+    [newCreator: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   cancelBeforeFunding: TypedContractMethod<[], [void], "nonpayable">;
 
   client: TypedContractMethod<[], [string], "view">;
@@ -314,6 +343,9 @@ export interface MilestoneEscrow extends BaseContract {
   getFunction(
     nameOrSignature: "approveAndRelease"
   ): TypedContractMethod<[milestoneId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "assignCreator"
+  ): TypedContractMethod<[newCreator: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "cancelBeforeFunding"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -378,6 +410,13 @@ export interface MilestoneEscrow extends BaseContract {
     ContractCompletedEvent.OutputObject
   >;
   getEvent(
+    key: "CreatorAssigned"
+  ): TypedContractEvent<
+    CreatorAssignedEvent.InputTuple,
+    CreatorAssignedEvent.OutputTuple,
+    CreatorAssignedEvent.OutputObject
+  >;
+  getEvent(
     key: "FundsDeposited"
   ): TypedContractEvent<
     FundsDepositedEvent.InputTuple,
@@ -427,6 +466,17 @@ export interface MilestoneEscrow extends BaseContract {
       ContractCompletedEvent.InputTuple,
       ContractCompletedEvent.OutputTuple,
       ContractCompletedEvent.OutputObject
+    >;
+
+    "CreatorAssigned(address,address)": TypedContractEvent<
+      CreatorAssignedEvent.InputTuple,
+      CreatorAssignedEvent.OutputTuple,
+      CreatorAssignedEvent.OutputObject
+    >;
+    CreatorAssigned: TypedContractEvent<
+      CreatorAssignedEvent.InputTuple,
+      CreatorAssignedEvent.OutputTuple,
+      CreatorAssignedEvent.OutputObject
     >;
 
     "FundsDeposited(address,uint256)": TypedContractEvent<

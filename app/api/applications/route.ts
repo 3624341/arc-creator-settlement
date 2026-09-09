@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import { verifyMessage } from "viem";
+import { createPublicClient, http, verifyMessage } from "viem";
+import { arcTestnet, ARC_RPC_URL } from "@/lib/arc";
+import { escrowAbi } from "@/lib/abi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,4 +88,63 @@ export async function POST(request: Request) {
     return Response.json({ error: "APPLICATION_SAVE_FAILED" }, { status: 503 });
   }
   return Response.json({ enabled: true, application: toApplication(data as ApplicationRow) }, { status: 201, headers: { "Cache-Control": "no-store" } });
+}
+
+export async function PATCH(request: Request) {
+  const client = backend();
+  if (!client) return Response.json({ enabled: false, error: "APPLICATIONS_UNAVAILABLE" }, { status: 503 });
+  const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+  const contractId = typeof body?.contractId === "string" ? body.contractId.trim() : "";
+  const applicant = typeof body?.applicant === "string" ? body.applicant.trim().toLowerCase() : "";
+  if (!addressPattern.test(contractId) || !addressPattern.test(applicant)) {
+    return Response.json({ error: "INVALID_SELECTION" }, { status: 400 });
+  }
+
+  const publicClient = createPublicClient({ chain: arcTestnet, transport: http(ARC_RPC_URL) });
+  let onchainClient: string;
+  let onchainCreator: string;
+  let onchainStatus: number;
+  try {
+    const [clientAddress, creatorAddress, status] = await Promise.all([
+      publicClient.readContract({ address: contractId as `0x${string}`, abi: escrowAbi, functionName: "client" }),
+      publicClient.readContract({ address: contractId as `0x${string}`, abi: escrowAbi, functionName: "creator" }),
+      publicClient.readContract({ address: contractId as `0x${string}`, abi: escrowAbi, functionName: "status" })
+    ]);
+    onchainClient = String(clientAddress).toLowerCase();
+    onchainCreator = String(creatorAddress).toLowerCase();
+    onchainStatus = Number(status);
+  } catch {
+    return Response.json({ error: "ESCROW_UNAVAILABLE" }, { status: 404 });
+  }
+
+  if (onchainStatus === 3) return Response.json({ error: "ESCROW_CANCELLED" }, { status: 409 });
+  if (onchainCreator !== applicant) return Response.json({ error: "CREATOR_ASSIGNMENT_NOT_CONFIRMED" }, { status: 409 });
+
+  const target = await client.from("job_applications")
+    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at")
+    .eq("contract_id", contractId)
+    .eq("applicant_wallet", applicant)
+    .maybeSingle();
+  if (target.error) return Response.json({ error: "APPLICATIONS_UNAVAILABLE" }, { status: 503 });
+  if (!target.data) return Response.json({ error: "APPLICATION_NOT_FOUND" }, { status: 404 });
+  const targetApplication = target.data as ApplicationRow;
+  if (targetApplication.status === "Selected") return Response.json({ enabled: true, application: toApplication(targetApplication) }, { headers: { "Cache-Control": "no-store" } });
+  if (targetApplication.status !== "Applied") return Response.json({ error: "APPLICATION_NOT_SELECTABLE" }, { status: 409 });
+
+  const selected = await client.from("job_applications")
+    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at")
+    .eq("contract_id", contractId)
+    .eq("status", "Selected")
+    .limit(1);
+  if (selected.error) return Response.json({ error: "APPLICATIONS_UNAVAILABLE" }, { status: 503 });
+  if (selected.data?.length) return Response.json({ error: "CREATOR_ALREADY_SELECTED" }, { status: 409 });
+
+  const updated = await client.from("job_applications")
+    .update({ status: "Selected", updated_at: new Date().toISOString() })
+    .eq("id", targetApplication.id)
+    .eq("status", "Applied")
+    .select("id,contract_id,escrow_address,applicant_wallet,status,applied_at,updated_at")
+    .single();
+  if (updated.error) return Response.json({ error: "APPLICATION_SELECTION_FAILED" }, { status: 503 });
+  return Response.json({ enabled: true, application: toApplication(updated.data as ApplicationRow), client: onchainClient }, { headers: { "Cache-Control": "no-store" } });
 }

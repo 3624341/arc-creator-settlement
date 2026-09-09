@@ -96,6 +96,13 @@ export const escrowAbi = [
   },
   {
     type: "function",
+    name: "assignCreator",
+    inputs: [{ name: "newCreator", type: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
     name: "submitMilestone",
     inputs: [{ name: "milestoneId", type: "uint256" }],
     outputs: [],
@@ -148,6 +155,15 @@ export const escrowAbi = [
     inputs: [],
     outputs: [{ name: "", type: "address" }],
     stateMutability: "view"
+  },
+  {
+    type: "event",
+    name: "CreatorAssigned",
+    inputs: [
+      { indexed: true, name: "client", type: "address" },
+      { indexed: true, name: "creator", type: "address" }
+    ],
+    anonymous: false
   },
   {
     type: "function",

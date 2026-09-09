@@ -14,3 +14,7 @@ test("contract draft validation rejects empty and malformed values", () => {
 test("contract draft validation accepts a positive USDC milestone", () => {
   assert.equal(validateContractDraft("QA A-B Settlement", creator, [{ description: "Onchain proof", amount: "0.1" }]), undefined);
 });
+
+test("contract draft validation allows an unassigned creator", () => {
+  assert.equal(validateContractDraft("Open creator job", "", [{ description: "Onchain proof", amount: "1" }]), undefined);
+});

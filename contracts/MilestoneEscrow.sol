@@ -20,7 +20,7 @@ contract MilestoneEscrow {
 
     IERC20 public immutable usdc;
     address public immutable client;
-    address public immutable creator;
+    address public creator;
     string public title;
     uint256 public totalAmount;
     uint256 public releasedAmount;
@@ -29,6 +29,7 @@ contract MilestoneEscrow {
     Milestone[] private milestones;
 
     event FundsDeposited(address indexed client, uint256 amount);
+    event CreatorAssigned(address indexed client, address indexed creator);
     event MilestoneSubmitted(uint256 indexed milestoneId, string description, uint256 amount);
     event MilestoneApproved(uint256 indexed milestoneId, address indexed client);
     event PaymentReleased(uint256 indexed milestoneId, address indexed creator, uint256 amount);
@@ -41,6 +42,9 @@ contract MilestoneEscrow {
     error InvalidMilestoneId();
     error NotFunded();
     error AlreadyFunded();
+    error CreatorNotAssigned();
+    error CreatorAlreadyAssigned();
+    error CreatorAssignmentLocked();
     error AlreadyReleased();
     error NotSubmitted();
     error TransferFailed();
@@ -64,7 +68,7 @@ contract MilestoneEscrow {
         string[] memory _descriptions,
         uint256[] memory _amounts
     ) {
-        if (_client == address(0) || _creator == address(0) || _usdc == address(0)) revert InvalidMilestones();
+        if (_client == address(0) || _usdc == address(0)) revert InvalidMilestones();
         if (_descriptions.length == 0 || _descriptions.length != _amounts.length) revert InvalidMilestones();
 
         client = _client;
@@ -86,8 +90,17 @@ contract MilestoneEscrow {
         }
     }
 
+    function assignCreator(address newCreator) external onlyClient {
+        if (status != ContractStatus.Created) revert CreatorAssignmentLocked();
+        if (creator != address(0)) revert CreatorAlreadyAssigned();
+        if (newCreator == address(0)) revert InvalidMilestones();
+        creator = newCreator;
+        emit CreatorAssigned(msg.sender, newCreator);
+    }
+
     function deposit() external onlyClient {
         if (status != ContractStatus.Created) revert AlreadyFunded();
+        if (creator == address(0)) revert CreatorNotAssigned();
         bool ok = usdc.transferFrom(msg.sender, address(this), totalAmount);
         if (!ok) revert TransferFailed();
         status = ContractStatus.Funded;
