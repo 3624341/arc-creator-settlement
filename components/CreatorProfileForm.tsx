@@ -50,6 +50,7 @@ export function CreatorProfileForm({ walletAddress, initialProfile, onSaved }: {
       const message = buildProfileSigningMessage({ walletAddress, profileVersion: version, issuedAt, payloadHash });
       const signature = await provider.request({ method: "personal_sign", params: [message, walletAddress] });
       const result = await saveRemoteProfile({ walletAddress, profile: pending, profileVersion: version, issuedAt, signature });
+      localStorage.setItem(`arc-creator-profile:${walletAddress.toLowerCase()}`, JSON.stringify(result.profile));
       setPending(undefined); setFeedback("Creator Passport saved successfully."); onSaved(result.profile);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Profile save failed. No changes were saved.");

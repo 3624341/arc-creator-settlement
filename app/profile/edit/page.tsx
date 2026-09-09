@@ -17,6 +17,9 @@ export default function CreatorProfileEditPage() {
     try { const saved = JSON.parse(localStorage.getItem("arc-browser-wallet") ?? "null") as { address?: string } | null; address = localStorage.getItem("arc-wallet-mode") === "browser" ? saved?.address ?? address : address; } catch { /* malformed local session */ }
     setWallet(address);
     if (!address) { setLoading(false); return; }
+    let cached: CreatorProfile | undefined;
+    try { cached = JSON.parse(localStorage.getItem(`arc-creator-profile:${address.toLowerCase()}`) ?? "null") as CreatorProfile | undefined; } catch { cached = undefined; }
+    if (cached) setProfile(cached);
     void getRemoteProfile(address).then((result) => setProfile(result.profile)).catch(() => undefined).finally(() => setLoading(false));
   }, []);
   if (!wallet) return <Shell><section className="rounded-[2rem] border border-arc-line bg-white/80 p-8"><h1 className="text-3xl font-black">Connect a browser wallet to edit your Creator Passport.</h1><p className="mt-3 text-sm text-arc-muted">A wallet signature proves that this wallet owns the profile.</p></section></Shell>;

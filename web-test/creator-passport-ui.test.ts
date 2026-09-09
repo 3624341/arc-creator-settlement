@@ -21,6 +21,8 @@ test("profile editing exposes labelled sections and browser-wallet signing", () 
 
 test("public profile handles unavailable state and safe external links", () => {
   assert.match(publicPage, /Creator profile unavailable/);
+  assert.match(publicPage, /No public Creator Passport is available for this wallet/);
+  assert.doesNotMatch(publicPage, /No public Creator Passport is available for \{short\(wallet\)\}/);
   assert.match(publicPage, /noopener noreferrer/);
   assert.match(publicPage, /Copy wallet/);
   assert.match(publicPage, /ArcScan/);
