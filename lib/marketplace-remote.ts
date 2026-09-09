@@ -17,7 +17,7 @@ export async function listRemoteApplications(input: { applicant?: string; contra
   return { enabled: body.enabled === true, applications: Array.isArray(body.applications) ? body.applications as RemoteApplication[] : [] };
 }
 
-export async function createRemoteApplication(input: { contractId: string; applicant: string; escrowAddress?: string }) {
+export async function createRemoteApplication(input: { contractId: string; applicant: string; escrowAddress?: string; message: string; signature: string }) {
   const body = await request("/api/applications", { method: "POST", body: JSON.stringify(input) });
   return { enabled: body.enabled === true, application: body.application as RemoteApplication };
 }

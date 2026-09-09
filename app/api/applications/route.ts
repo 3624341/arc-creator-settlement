@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { verifyMessage } from "viem";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,9 +61,19 @@ export async function POST(request: Request) {
   const contractId = typeof body?.contractId === "string" ? body.contractId.trim() : "";
   const applicant = typeof body?.applicant === "string" ? body.applicant.trim().toLowerCase() : "";
   const escrowAddress = typeof body?.escrowAddress === "string" ? body.escrowAddress.trim() : null;
-  if (!contractId || !applicant || !addressPattern.test(applicant) || (escrowAddress && !addressPattern.test(escrowAddress))) {
+  const message = typeof body?.message === "string" ? body.message : "";
+  const signature = typeof body?.signature === "string" ? body.signature : "";
+  const expectedMessage = `Arc Creator Settlement application\nContract: ${contractId}\nApplicant: ${applicant}`;
+  if (!contractId || !applicant || !addressPattern.test(applicant) || (escrowAddress && !addressPattern.test(escrowAddress)) || message !== expectedMessage || !/^0x[0-9a-fA-F]+$/.test(signature)) {
     return Response.json({ error: "INVALID_APPLICATION" }, { status: 400 });
   }
+  let verified = false;
+  try {
+    verified = await verifyMessage({ address: applicant as `0x${string}`, message, signature: signature as `0x${string}` });
+  } catch {
+    verified = false;
+  }
+  if (!verified) return Response.json({ error: "APPLICATION_SIGNATURE_INVALID" }, { status: 401 });
   const { data, error } = await client.from("job_applications").upsert({
     contract_id: contractId,
     escrow_address: escrowAddress,
