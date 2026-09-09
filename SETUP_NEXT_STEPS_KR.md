@@ -125,13 +125,14 @@ http://localhost:3000
 
 1. `Circle Wallet` → 테스트 사용자 ID 입력
 2. Circle PIN flow로 ARC-TESTNET SCA wallet 생성
-3. `Create Contract` → Creator 주소 + milestones 입력
-4. Circle wallet로 Factory `createEscrow()` 승인
-5. Contract 상세 → USDC approve → deposit
-6. Creator milestone submit
-7. Client `approveAndRelease()`
-8. 화면에 표시되는 `View public receipt`로 영수증 열기
-9. 영수증의 금액·Creator·Block과 ArcScan transaction 비교
+3. `Create Contract` → Creator 주소(선택사항) + milestones 입력
+4. Creator 주소를 비워두었다면 creator 지갑에서 공고를 열고 `Apply as creator` 서명
+5. 광고주 지갑의 `My Page → Applications received`에서 지원자를 선택하고 `assignCreator(address)` 승인
+6. Contract 상세 → USDC approve → deposit
+7. 선택된 Creator가 milestone submit
+8. Client `approveAndRelease()`
+9. 화면에 표시되는 `View public receipt`로 영수증 열기
+10. 영수증의 금액·Creator·Block과 ArcScan transaction 비교
 
 영수증 주소 형식:
 
@@ -175,6 +176,8 @@ SUPABASE_SECRET_KEY=...
 ```
 
 `SUPABASE_SECRET_KEY`에는 절대 `NEXT_PUBLIC_` 접두사를 붙이지 않는다. Supabase가 없어도 개별 영수증과 브라우저 로컬 최근 기록은 정상 작동한다.
+
+지원서가 다른 브라우저에도 보이려면 `SUPABASE_URL`과 `SUPABASE_SECRET_KEY`를 Vercel Production 환경에 저장하고 `/api/applications`가 활성화되어야 한다. 지원자 선택은 브라우저 UI가 아니라 광고주 지갑의 Arc 온체인 `assignCreator` 트랜잭션을 먼저 확인한 뒤 서버에 `Selected` 상태를 기록한다.
 
 ---
 

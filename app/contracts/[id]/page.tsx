@@ -14,6 +14,7 @@ import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-w
 import { findCircleReleaseTransaction, requestReceiptIndex, saveRecentReceipt } from "@/lib/receipts/client";
 import { getApplicationForWallet, isWalletOwner, saveApplication, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
 import { createRemoteApplication, listRemoteApplications } from "@/lib/marketplace-remote";
+import { zeroAddress } from "viem";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
 type WalletMode = "circle" | "browser";
@@ -113,7 +114,7 @@ export default function ContractDetailPage() {
 
   const isOwner = Boolean(walletAddress && (localContract
     ? isWalletOwner(walletAddress, localContract)
-    : creatorAddress && walletAddress.toLowerCase() === creatorAddress.toLowerCase()));
+    : clientAddress && walletAddress.toLowerCase() === clientAddress.toLowerCase()));
 
   async function handleApply() {
     setApplicationFeedback(undefined);
@@ -242,13 +243,14 @@ export default function ContractDetailPage() {
   const pendingCount = milestones.filter((m) => m.status === "Pending").length;
   const progress = total > 0 ? Math.round((paid / total) * 100) : 0;
   const isClient = Boolean(walletAddress && clientAddress && walletAddress.toLowerCase() === clientAddress.toLowerCase());
-  const isCreator = Boolean(walletAddress && creatorAddress && walletAddress.toLowerCase() === creatorAddress.toLowerCase());
+  const isUnassigned = !creatorAddress || creatorAddress.toLowerCase() === zeroAddress.toLowerCase();
+  const isCreator = Boolean(walletAddress && creatorAddress && !isUnassigned && walletAddress.toLowerCase() === creatorAddress.toLowerCase());
   const requiredAllowance = parseUsdc(String(total));
   const usdcApproved = requiredAllowance > 0n && usdcAllowance !== undefined && usdcAllowance >= requiredAllowance;
   const isCreated = escrowStatus === 0;
   const isFunded = escrowStatus === 1;
   const isCompleted = escrowStatus === 2;
-  const canFund = isClient && isCreated;
+  const canFund = isClient && isCreated && !isUnassigned;
 
   async function refreshUsdcAllowance() {
     if (!address || !walletAddress || total <= 0) return;
@@ -450,18 +452,19 @@ export default function ContractDetailPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-arc-muted">Creator opportunity</p>
-              <p className="mt-1 font-black">{application ? "Application status: Applied" : "Interested in this job?"}</p>
+              <p className="mt-1 font-black">{application ? `Application status: ${application.status}` : isUnassigned ? "Creator not selected yet" : "Interested in this job?"}</p>
               <p className="mt-2 text-sm text-arc-muted">Payout recipient</p>
-              <p className="break-all text-sm font-black">{creatorAddress ?? localContract?.creator ?? "Loading creator address…"}</p>
+              <p className="break-all text-sm font-black">{creatorAddress ? (isUnassigned ? "Not assigned yet" : creatorAddress) : "Loading creator address…"}</p>
               {applicationFeedback ? <p role="status" className="mt-2 text-sm font-semibold text-arc-muted">{applicationFeedback}</p> : null}
             </div>
-            {!isOwner && !application && !isCompleted ? <Button disabled={demoMode} onClick={handleApply}>Apply as creator</Button> : null}
-            {application ? <span className="rounded-full bg-arc-lime px-4 py-2 text-sm font-black text-arc-ink">Applied</span> : null}
+            {!isOwner && isUnassigned && !application && !isCompleted ? <Button disabled={demoMode} onClick={handleApply}>Apply as creator</Button> : null}
+            {application ? <span className="rounded-full bg-arc-lime px-4 py-2 text-sm font-black text-arc-ink">{application.status}</span> : null}
+            {!isOwner && !isUnassigned && !application ? <span className="rounded-full bg-arc-bg px-4 py-2 text-sm font-black text-arc-muted">Creator selected</span> : null}
           </div>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          {canFund ? <>
+          {isClient && isCreated && isUnassigned ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Select a creator before funding this escrow.</p> : canFund ? <>
             <Button disabled={demoMode || !address || usdcApproved} onClick={approveDeposit}>{usdcApproved ? "Approved" : "Approve USDC"}</Button>
             <Button disabled={demoMode || !address || isFunded} className="bg-arc-lime text-arc-ink" onClick={deposit}>{isFunded ? "Funded" : "Deposit to escrow"}</Button>
           </> : isClient && isCompleted ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">This escrow is complete. No further funding actions are available.</p> : isClient && isFunded ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Escrow funded. Review submitted milestones and release approved work.</p> : <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Only the advertiser can approve or deposit.</p>}

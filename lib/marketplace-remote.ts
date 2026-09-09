@@ -21,3 +21,8 @@ export async function createRemoteApplication(input: { contractId: string; appli
   const body = await request("/api/applications", { method: "POST", body: JSON.stringify(input) });
   return { enabled: body.enabled === true, application: body.application as RemoteApplication };
 }
+
+export async function selectRemoteApplication(input: { contractId: string; applicant: string }) {
+  const body = await request("/api/applications", { method: "PATCH", body: JSON.stringify(input) });
+  return { enabled: body.enabled === true, application: body.application as RemoteApplication };
+}

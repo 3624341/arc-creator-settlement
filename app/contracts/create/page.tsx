@@ -12,6 +12,7 @@ import { validateContractDraft } from "@/lib/contract-validation";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import type { LocalContract } from "@/lib/marketplace-store";
 import { getEscrowAddressFromCreatedLogs } from "@/lib/escrow-deployment";
+import { zeroAddress } from "viem";
 
 const emptyMilestone = { description: "", amount: "" };
 type MilestoneInput = typeof emptyMilestone;
@@ -119,9 +120,9 @@ export default function CreateContractPage() {
     const contract: LocalContract = {
       id: escrowAddress ?? `pending-${Date.now()}`,
       title,
-      creator,
-      advertiser: account ?? creator,
-      owner: account ?? creator,
+      creator: creator.trim() || zeroAddress,
+      advertiser: account,
+      owner: account,
       totalUsdc: String(total),
       status: escrowAddress ? "Created" : "Pending onchain",
       escrowAddress
@@ -137,6 +138,7 @@ export default function CreateContractPage() {
       if (!ESCROW_FACTORY_ADDRESS) throw new Error("Factory is not deployed yet. Circle Contracts deployment must be completed first.");
       const validationError = validateContractDraft(title, creator, milestones);
       if (validationError) throw new Error(validationError);
+      const creatorAddress = (creator.trim() || zeroAddress) as `0x${string}`;
 
       if (walletMode === "circle") {
         const session = getCircleSession();
@@ -149,7 +151,7 @@ export default function CreateContractPage() {
           contractAddress: ESCROW_FACTORY_ADDRESS,
           abiFunctionSignature: "createEscrow(address,string,string[],uint256[])",
           abiParameters: [
-            creator,
+            creatorAddress,
             title,
             milestones.map((m) => m.description),
             milestones.map((m) => parseUsdc(m.amount).toString())
@@ -163,7 +165,7 @@ export default function CreateContractPage() {
           const logs = await publicClient.getLogs({
             address: ESCROW_FACTORY_ADDRESS,
             event: factoryAbi.find((item) => item.type === "event" && item.name === "EscrowCreated") as any,
-            args: { client: session.address as `0x${string}`, creator: creator as `0x${string}` },
+            args: { client: session.address as `0x${string}`, creator: creatorAddress },
             fromBlock: beforeBlock > 20n ? beforeBlock - 20n : 0n,
             toBlock: "latest"
           });
@@ -189,7 +191,7 @@ export default function CreateContractPage() {
         address: ESCROW_FACTORY_ADDRESS,
         abi: factoryAbi,
         functionName: "createEscrow",
-        args: [creator as `0x${string}`, title, milestones.map((m) => m.description), milestones.map((m) => parseUsdc(m.amount))],
+        args: [creatorAddress, title, milestones.map((m) => m.description), milestones.map((m) => parseUsdc(m.amount))],
         account
       });
       setAccount(account);
@@ -197,7 +199,7 @@ export default function CreateContractPage() {
         address: ESCROW_FACTORY_ADDRESS,
         abi: factoryAbi,
         functionName: "createEscrow",
-        args: [creator as `0x${string}`, title, milestones.map((m) => m.description), milestones.map((m) => parseUsdc(m.amount))],
+        args: [creatorAddress, title, milestones.map((m) => m.description), milestones.map((m) => parseUsdc(m.amount))],
         account,
         gas,
       });
@@ -242,8 +244,8 @@ export default function CreateContractPage() {
             <label className="grid gap-2 font-bold">Project title
               <input aria-label="Project title" required className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" value={title} onChange={(e) => setTitle(e.target.value)} />
             </label>
-            <label className="grid gap-2 font-bold">Creator wallet
-              <input aria-label="Creator wallet address" required className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" value={creator} onChange={(e) => setCreator(e.target.value)} />
+            <label className="grid gap-2 font-bold">Creator wallet <span className="text-sm font-normal text-arc-muted">(optional — select after applications arrive)</span>
+              <input aria-label="Creator wallet address (optional)" className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" placeholder="Leave blank to select a creator later" value={creator} onChange={(e) => setCreator(e.target.value)} />
             </label>
             <div className="grid gap-3">
               <div className="flex items-center justify-between">

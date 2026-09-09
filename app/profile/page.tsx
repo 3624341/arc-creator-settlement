@@ -7,6 +7,7 @@ import { getCircleSession } from "@/lib/circle-wallet-client";
 import { deleteLocalContract, getApplications, getContractsForWallet, hideContractForWallet, isContractHidden, isWalletCreator, isWalletOwner, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
 import { contractsForWallet, loadPublicMarketplaceContracts } from "@/lib/marketplace-chain";
 import { listRemoteApplications } from "@/lib/marketplace-remote";
+import { CreatorSelectionButton } from "@/components/CreatorSelectionButton";
 
 const WALLET_KEY = "arc-browser-wallet";
 
@@ -77,6 +78,10 @@ export default function ProfilePage() {
     if (changed) setContracts((current) => current.filter((candidate) => contractKey(candidate) !== contractKey(contract)));
   }
 
+  function markCreatorSelected(application: JobApplication) {
+    setReceivedApplications((current) => current.map((candidate) => candidate.id === application.id ? application : candidate));
+  }
+
   const active = useMemo(() => applications.filter((application) => application.status === "Selected" || application.status === "Completed"), [applications]);
   const createdContracts = useMemo(() => contracts.filter((contract) => isWalletOwner(wallet, contract)), [contracts, wallet]);
   const assignedContracts = useMemo(() => contracts.filter((contract) => isWalletCreator(wallet, contract)), [contracts, wallet]);
@@ -96,7 +101,7 @@ export default function ProfilePage() {
       <div className="rounded-[2rem] bg-arc-ink p-6 text-white"><h2 className="text-2xl font-black">My Applications</h2>{applications.length ? <div className="mt-5 space-y-3">{applications.map((application) => <Link key={application.id} href={`/contracts/${application.contractId}`} className="block rounded-2xl bg-white/10 p-4 hover:bg-white/15"><p className="font-black">{application.contractId.slice(0, 10)}…</p><span className="mt-2 inline-flex rounded-full bg-arc-lime px-3 py-1 text-xs font-black text-arc-ink">{application.status}</span></Link>)}</div> : <p className="mt-4 text-sm text-white/65">No applications yet. Explore a job and apply as a creator.</p>}</div>
     </section>
     <section className="mt-6 rounded-[2rem] border border-arc-line bg-white/80 p-6"><h2 className="text-2xl font-black">Active Work</h2><p className="mt-2 text-sm text-arc-muted">Selected and completed applications will show milestone progress here as the contract state is updated.</p>{active.length ? <div className="mt-4 text-sm font-bold">{active.length} active application{active.length === 1 ? "" : "s"}</div> : null}</section>
-    <section className="mt-6 rounded-[2rem] border border-arc-line bg-white/80 p-6"><h2 className="text-2xl font-black">Applications received</h2><p className="mt-2 text-sm text-arc-muted">Creators who applied from another wallet appear here when shared storage is enabled.</p>{receivedApplications.length ? <div className="mt-4 grid gap-3 md:grid-cols-2">{receivedApplications.map((application) => <Link key={application.id} href={`/contracts/${application.contractId}`} className="rounded-2xl border border-arc-line p-4 hover:bg-arc-bg"><p className="font-black">{short(application.applicant)}</p><p className="mt-2 text-sm text-arc-muted">{application.status} · {new Date(application.appliedAt).toLocaleDateString()}</p></Link>)}</div> : <p className="mt-4 text-sm text-arc-muted">No shared applications found yet.</p>}</section>
+    <section className="mt-6 rounded-[2rem] border border-arc-line bg-white/80 p-6"><h2 className="text-2xl font-black">Applications received</h2><p className="mt-2 text-sm text-arc-muted">Creators who applied from another wallet appear here when shared storage is enabled.</p>{receivedApplications.length ? <div className="mt-4 grid gap-3 md:grid-cols-2">{receivedApplications.map((application) => <article key={application.id} className="flex items-center justify-between gap-4 rounded-2xl border border-arc-line p-4"><Link href={`/contracts/${application.contractId}`} className="min-w-0 flex-1 hover:text-arc-purple"><p className="font-black">{short(application.applicant)}</p><p className="mt-2 text-sm text-arc-muted">{application.status} · {new Date(application.appliedAt).toLocaleDateString()}</p></Link><CreatorSelectionButton contractId={application.contractId} applicant={application} advertiser={wallet} onSelected={markCreatorSelected} /></article>)}</div> : <p className="mt-4 text-sm text-arc-muted">No shared applications found yet.</p>}</section>
     <section className="mt-6 rounded-[2rem] border border-arc-line bg-white/80 p-6"><h2 className="text-2xl font-black">Creator history</h2><p className="mt-2 text-sm text-arc-muted">Public escrows assigned to this wallet are listed here, even when another wallet created the job.</p>{assignedContracts.length ? <div className="mt-4 grid gap-3 md:grid-cols-2">{assignedContracts.map((contract) => <Link key={contract.id} href={`/contracts/${contract.escrowAddress ?? contract.id}`} className="rounded-2xl border border-arc-line p-4 hover:bg-arc-bg"><p className="font-black">{contract.title}</p><p className="mt-2 text-sm text-arc-muted">{contract.status} · {contract.totalUsdc} USDC</p></Link>)}</div> : <p className="mt-4 text-sm text-arc-muted">No assigned creator work found on Arc yet.</p>}</section>
   </Shell>;
 }
