@@ -141,6 +141,20 @@ export default function ContractDetailPage() {
       status: "Applied",
       appliedAt: new Date().toISOString()
     };
+    let applicationMessage = "";
+    let applicationSignature = "";
+    if (walletMode === "browser") {
+      try {
+        const stored = JSON.parse(localStorage.getItem("arc-browser-wallet") ?? "null") as { name?: BrowserWalletName } | null;
+        if (!stored?.name) throw new Error("Connect a browser wallet before applying.");
+        const provider = resolveBrowserProvider(stored.name);
+        applicationMessage = `Arc Creator Settlement application\nContract: ${contractId}\nApplicant: ${walletAddress.toLowerCase()}`;
+        applicationSignature = await provider.request({ method: "personal_sign", params: [applicationMessage, walletAddress] });
+      } catch (error) {
+        setApplicationFeedback(error instanceof Error ? error.message : "Wallet signature was cancelled. No application was saved.");
+        return;
+      }
+    }
     const result = saveApplication(next, { contracts: localContract ? [localContract] : undefined });
     if (!result.ok) {
       setApplicationFeedback(result.error === "duplicate" ? "Application already submitted." : result.error === "owner" ? "Contract owners cannot apply to their own job." : "Could not save your application. Try again.");
@@ -149,7 +163,8 @@ export default function ContractDetailPage() {
     }
     setApplication(result.application);
     try {
-      const remote = await createRemoteApplication({ contractId, applicant: walletAddress, escrowAddress: localContract?.escrowAddress ?? (/^0x[a-fA-F0-9]{40}$/.test(params.id) ? params.id : undefined) });
+      if (!applicationSignature) throw new Error("Circle wallet applications use local fallback until a signing method is configured.");
+      const remote = await createRemoteApplication({ contractId, applicant: walletAddress, escrowAddress: localContract?.escrowAddress ?? (/^0x[a-fA-F0-9]{40}$/.test(params.id) ? params.id : undefined), message: applicationMessage, signature: applicationSignature });
       if (remote.application) setApplication(remote.application);
       setApplicationFeedback(remote.enabled
         ? "Application submitted. The advertiser can now review your profile."
