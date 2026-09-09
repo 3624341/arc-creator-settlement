@@ -49,6 +49,33 @@ create table if not exists public.settlement_receipts (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.job_applications (
+  id uuid primary key default gen_random_uuid(),
+  contract_id text not null,
+  escrow_address text,
+  applicant_wallet text not null check (applicant_wallet ~ '^0x[0-9a-fA-F]{40}$'),
+  status text not null default 'Applied' check (status in ('Applied', 'Selected', 'Rejected', 'Completed')),
+  applied_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (contract_id, applicant_wallet)
+);
+
+create index if not exists job_applications_contract_idx on public.job_applications (contract_id, applied_at desc);
+create index if not exists job_applications_applicant_idx on public.job_applications (applicant_wallet, applied_at desc);
+
+alter table public.job_applications enable row level security;
+
+grant select on table public.job_applications to anon, authenticated;
+grant select, insert, update, delete on table public.job_applications to service_role;
+revoke insert, update, delete on table public.job_applications from anon, authenticated;
+
+drop policy if exists "Public can read job applications" on public.job_applications;
+create policy "Public can read job applications"
+on public.job_applications
+for select
+to anon, authenticated
+using (true);
+
 alter table public.settlement_receipts enable row level security;
 
 grant select on table public.settlement_receipts to anon, authenticated;

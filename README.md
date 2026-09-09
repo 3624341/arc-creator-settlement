@@ -130,15 +130,15 @@ npm run dev
 
 Build for deployment with `npm run build`; deploy the `arc-builder-hub` directory as its own Next.js project.
 
-## Optional receipt index
+## Shared applications and receipt index
 
-Receipts work without a database. To show a shared recent-receipts feed:
+Run `supabase/schema.sql` in your Supabase project to create the public receipt index and shared application table. The application API stores creator applications once and makes them visible to the advertiser's wallet on another browser.
 
 1. Run `supabase/schema.sql` in your Supabase project.
 2. Set `SUPABASE_URL` and server-only `SUPABASE_SECRET_KEY`.
 3. Never prefix the secret with `NEXT_PUBLIC_`.
 
-The public can read indexed receipts, but only the server can write, and the server verifies Arc data before every upsert.
+The public can read confirmed receipts and application records. Only the server can write, and the server verifies Arc receipt data before every receipt upsert. If Supabase is unavailable, the UI keeps localStorage as an offline fallback for development; it will not provide cross-browser sharing.
 
 ## Verification
 

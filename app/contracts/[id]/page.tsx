@@ -13,6 +13,7 @@ import { formatUsdcExact, parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import { findCircleReleaseTransaction, requestReceiptIndex, saveRecentReceipt } from "@/lib/receipts/client";
 import { getApplicationForWallet, isWalletOwner, saveApplication, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
+import { createRemoteApplication, listRemoteApplications } from "@/lib/marketplace-remote";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
 type WalletMode = "circle" | "browser";
@@ -101,13 +102,20 @@ export default function ContractDetailPage() {
     if (!walletAddress) return;
     const contractIds = [params.id, localContract?.id, localContract?.escrowAddress].filter((value): value is string => Boolean(value));
     setApplication(getApplicationForWallet(walletAddress, contractIds));
+    let cancelled = false;
+    void listRemoteApplications({ applicant: walletAddress, contractIds })
+      .then((result) => {
+        if (!cancelled && result.applications[0]) setApplication(result.applications[0]);
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
   }, [walletAddress, params.id, localContract?.id, localContract?.escrowAddress]);
 
   const isOwner = Boolean(walletAddress && (localContract
     ? isWalletOwner(walletAddress, localContract)
     : creatorAddress && walletAddress.toLowerCase() === creatorAddress.toLowerCase()));
 
-  function handleApply() {
+  async function handleApply() {
     setApplicationFeedback(undefined);
     if (demoMode) {
       setApplicationFeedback("Public demo mode is read-only. Connect to a live contract to apply.");
@@ -140,7 +148,16 @@ export default function ContractDetailPage() {
       return;
     }
     setApplication(result.application);
-    setApplicationFeedback("Application submitted. The advertiser can now review your profile.");
+    try {
+      const remote = await createRemoteApplication({ contractId, applicant: walletAddress, escrowAddress: localContract?.escrowAddress ?? (/^0x[a-fA-F0-9]{40}$/.test(params.id) ? params.id : undefined) });
+      if (remote.application) setApplication(remote.application);
+      setApplicationFeedback(remote.enabled
+        ? "Application submitted. The advertiser can now review your profile."
+        : "Application saved locally. Shared review is not configured yet.");
+    } catch (error) {
+      if (error instanceof Error && error.message === "DUPLICATE_APPLICATION") setApplicationFeedback("Application already submitted.");
+      else setApplicationFeedback("Application saved locally. Shared review is temporarily unavailable.");
+    }
   }
 
   useEffect(() => {
