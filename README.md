@@ -29,6 +29,16 @@ Programmable USDC milestone settlement for creators, freelancers, and marketplac
 - ArcScan verification links
 - Recovery-safe Circle Entity Secret workflow
 - Automated web and Solidity tests
+- Wallet-signed Creator Passport profiles with public profile pages
+- Advertiser Applicant Cards with role/language filters and Arc settlement badges
+
+## Creator Passport
+
+Creators can build a public passport at `/profile/edit` using a browser-wallet signature. It includes roles, skills, languages, region, HTTPS social links, portfolio items, availability, and work preferences. Social links and follower counts are always marked **Self-reported**; the app does not claim OAuth ownership or automatically verify follower counts.
+
+Advertisers review the passport from `/profile` under **Applications received** or open `/creators/<wallet>`. **Wallet Signed** means the profile update was signed by that wallet. **Arc Settlement Verified** is derived only from confirmed `settlement_receipts` rows and shows completed payouts, distinct escrows, and total USDC paid. There is no composite score or ranking by follower count.
+
+New applications require a public, complete passport and include the profile version in the signed application message. Existing applications remain readable and applicants without profiles render a limited-information fallback card and can still be selected through the existing onchain `assignCreator(address)` flow.
 
 ## Verified result
 
@@ -42,8 +52,8 @@ Payment release transaction:
 
 ## Testing
 
-- Web tests: 19 passing
-- Solidity tests: 2 passing
+- Web tests: 73 passing (including Creator Passport and Applicant Card coverage)
+- Solidity tests: run `npm test` in an environment with a working native solc binary
 - Production build: passing
 
 ## Roadmap
@@ -53,6 +63,10 @@ Payment release transaction:
 - Expose reusable marketplace APIs
 - Explore Circle Gateway for cross-chain USDC funding
 - Complete a focused security review and controlled pilot
+- Add `/creators` global discovery with role, language, region, and verification filters
+- Add creator invites, campaign-specific proposals, shortlist, reviews, disputes, and agency/team accounts
+- Add social ownership verification and official channel analytics APIs
+- Migrate to Arc Mainnet after a controlled testnet pilot
 
 # Arc Creator Settlement v0.3
 
@@ -132,11 +146,13 @@ Build for deployment with `npm run build`; deploy the `arc-builder-hub` director
 
 ## Shared applications and receipt index
 
-Run `supabase/schema.sql` in your Supabase project to create the public receipt index and shared application table. The application API stores creator applications once and makes them visible to the advertiser's wallet on another browser.
+Run `supabase/schema.sql` in your Supabase project to create the public receipt index, shared application table, and Creator Passport tables. For an existing database, apply the idempotent `supabase/migrations/20260909_creator_passport.sql` migration first. The application API stores creator applications once and makes them visible to the advertiser's wallet on another browser.
 
 1. Run `supabase/schema.sql` in your Supabase project.
 2. Set `SUPABASE_URL` and server-only `SUPABASE_SECRET_KEY`.
 3. Never prefix the secret with `NEXT_PUBLIC_`.
+
+The profile API also requires the same server-only Supabase secret. Public profile reads are no-store and return only `is_public=true` rows. Profile edits are browser-wallet-only because Circle Wallet signing support is not assumed; Circle contract and payout functionality remains unchanged.
 
 The public can read confirmed receipts and application records. Only the server can write, and the server verifies Arc receipt data before every receipt upsert. If Supabase is unavailable, the UI keeps localStorage as an offline fallback for development; it will not provide cross-browser sharing.
 

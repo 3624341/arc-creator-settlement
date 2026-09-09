@@ -177,7 +177,21 @@ SUPABASE_SECRET_KEY=...
 
 `SUPABASE_SECRET_KEY`에는 절대 `NEXT_PUBLIC_` 접두사를 붙이지 않는다. Supabase가 없어도 개별 영수증과 브라우저 로컬 최근 기록은 정상 작동한다.
 
-지원서가 다른 브라우저에도 보이려면 `SUPABASE_URL`과 `SUPABASE_SECRET_KEY`를 Vercel Production 환경에 저장하고 `/api/applications`가 활성화되어야 한다. 지원자 선택은 브라우저 UI가 아니라 광고주 지갑의 Arc 온체인 `assignCreator` 트랜잭션을 먼저 확인한 뒤 서버에 `Selected` 상태를 기록한다.
+지원서와 Creator Passport가 다른 브라우저에도 보이려면 먼저 Supabase SQL Editor에서 기존 DB에 `supabase/migrations/20260909_creator_passport.sql`을 실행한다. 새 DB라면 `supabase/schema.sql`을 실행한다. 그다음 `SUPABASE_URL`과 `SUPABASE_SECRET_KEY`를 서버 전용 환경변수로 저장하고 `/api/applications`와 `/api/profiles`가 활성화되어야 한다. `SUPABASE_SECRET_KEY`에는 절대 `NEXT_PUBLIC_` 접두사를 붙이지 않는다.
+
+Creator Passport 편집은 현재 Browser Wallet의 `personal_sign`을 사용한다. Circle Wallet 사용자는 공개 프로필 조회와 기존 Arc 계약·지급 기능을 사용할 수 있지만 프로필 생성·수정은 Browser Wallet으로 전환해야 한다. 프로필의 SNS 링크와 follower count는 실제 소유권 검증이 아니며 UI에서 항상 `Self-reported`로 표시된다.
+
+지원자 선택은 브라우저 UI가 아니라 광고주 지갑의 Arc 온체인 `assignCreator` 트랜잭션을 먼저 확인한 뒤 서버에 `Selected` 상태를 기록한다. 기존 profile 없는 application도 fallback card로 표시되며 삭제·강제 무효화되지 않는다.
+
+### Creator Passport 수동 QA
+
+1. Browser Wallet으로 `/profile/edit`에서 필수 필드와 HTTPS 링크를 입력하고 미리보기 후 서명한다.
+2. 서명을 취소하면 DB에 저장되지 않는지 확인한다.
+3. 시크릿 창에서 `/creators/<wallet>`을 열어 공개 프로필·Self-reported 라벨·Arc Settlement Verified 집계를 확인한다.
+4. `is_public=false` 프로필이 공개 URL에서 지갑 정보 없이 empty state를 보이는지 확인한다.
+5. 미완성 프로필로 공고 지원 시 저장되지 않고 `/profile/edit` 안내가 보이는지 확인한다.
+6. 광고주 My Page에서 Applicant Card의 역할·언어 필터, Arc verified first 정렬, View profile, Select creator를 확인한다.
+7. 기존 profile 없는 application이 fallback card로 보이고 Select creator 흐름이 계속 작동하는지 확인한다.
 
 ---
 
