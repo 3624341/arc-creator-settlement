@@ -53,7 +53,7 @@ Payment release transaction:
 ## Testing
 
 - Web tests: 73 passing (including Creator Passport and Applicant Card coverage)
-- Solidity tests: run `npm test` in an environment with a working native solc binary
+- Solidity tests: 4 passing
 - Production build: passing
 
 ## Roadmap
@@ -180,7 +180,7 @@ npm run build
 
 The Vercel product, factory, funded escrow, release transaction, receipt, and matching ArcScan capture are now public. A short demo video remains optional follow-up evidence.
 
-Use [`docs/discord-application-evidence.md`](docs/discord-application-evidence.md) and [`docs/submission-checklist.md`](docs/submission-checklist.md). Keep every undeployed item marked as pending; this repository intentionally does not fabricate usage, traction, or integrations.
+Use [`docs/discord-application-evidence.md`](docs/discord-application-evidence.md), [`docs/deployment-evidence-2026-09-10.md`](docs/deployment-evidence-2026-09-10.md), and [`docs/submission-checklist.md`](docs/submission-checklist.md). Keep every undeployed item marked as pending; this repository intentionally does not fabricate usage, traction, or integrations.
 
 ## Project documents
 
