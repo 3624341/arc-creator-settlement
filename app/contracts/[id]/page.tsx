@@ -13,11 +13,12 @@ import { formatUsdcExact, parseUsdc } from "@/lib/format";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import { findCircleReleaseTransaction, requestReceiptIndex, saveRecentReceipt } from "@/lib/receipts/client";
 import { getApplicationForWallet, isWalletOwner, saveApplication, type JobApplication, type LocalContract } from "@/lib/marketplace-store";
-import { createRemoteApplication, listRemoteApplications } from "@/lib/marketplace-remote";
-import { getRemoteProfile } from "@/lib/creator-profile-remote";
+import { createRemoteApplication, listRemoteApplications, type RemoteApplication } from "@/lib/marketplace-remote";
+import { getRemoteProfile, listRemoteProfiles, type RemoteCreatorProfile } from "@/lib/creator-profile-remote";
 import { buildApplicationSigningMessage } from "@/lib/creator-profile-signing";
 import { isProfileComplete, type CreatorProfile, type CreatorVerification } from "@/lib/creator-profile";
 import { ApplicationProfilePreview } from "@/components/ApplicationProfilePreview";
+import { ContractApplicants } from "@/components/ApplicantCard";
 import { zeroAddress } from "viem";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
@@ -51,6 +52,10 @@ export default function ContractDetailPage() {
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile>();
   const [creatorVerification, setCreatorVerification] = useState<CreatorVerification>();
   const [showApplicationPreview, setShowApplicationPreview] = useState(false);
+  const [receivedApplications, setReceivedApplications] = useState<RemoteApplication[]>([]);
+  const [applicantProfiles, setApplicantProfiles] = useState<Record<string, RemoteCreatorProfile>>({});
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
+  const [applicantsError, setApplicantsError] = useState<string>();
 
   function explainError(error: unknown, fallback: string) {
     const message = error instanceof Error ? error.message : fallback;
@@ -127,6 +132,50 @@ export default function ContractDetailPage() {
   const isOwner = Boolean(walletAddress && (localContract
     ? isWalletOwner(walletAddress, localContract)
     : clientAddress && walletAddress.toLowerCase() === clientAddress.toLowerCase()));
+  const isClient = Boolean(walletAddress && clientAddress && walletAddress.toLowerCase() === clientAddress.toLowerCase());
+
+  useEffect(() => {
+    if (!isClient) {
+      setReceivedApplications([]);
+      setApplicantProfiles({});
+      setApplicantsError(undefined);
+      return;
+    }
+
+    const contractIds = [...new Set([params.id, address, localContract?.id, localContract?.escrowAddress].filter((value): value is string => Boolean(value)))];
+    if (!contractIds.length) return;
+    let cancelled = false;
+    setApplicantsLoading(true);
+    setApplicantsError(undefined);
+
+    void listRemoteApplications({ contractIds })
+      .then(async (result) => {
+        if (cancelled) return;
+        setReceivedApplications(result.applications);
+        if (!result.applications.length) {
+          setApplicantProfiles({});
+          return;
+        }
+        try {
+          const profiles = await listRemoteProfiles(result.applications.map((application) => application.applicant));
+          if (!cancelled) setApplicantProfiles(Object.fromEntries(profiles.map((profile) => [profile.walletAddress.toLowerCase(), profile])));
+        } catch {
+          if (!cancelled) setApplicantProfiles({});
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setReceivedApplications([]);
+          setApplicantProfiles({});
+          setApplicantsError("Applications could not be loaded. Refresh this page to try again.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setApplicantsLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [address, isClient, localContract?.escrowAddress, localContract?.id, params.id]);
 
   async function handleApply() {
     setApplicationFeedback(undefined);
@@ -264,7 +313,6 @@ export default function ContractDetailPage() {
   const paidCount = milestones.filter((m) => m.status === "Paid").length;
   const pendingCount = milestones.filter((m) => m.status === "Pending").length;
   const progress = total > 0 ? Math.round((paid / total) * 100) : 0;
-  const isClient = Boolean(walletAddress && clientAddress && walletAddress.toLowerCase() === clientAddress.toLowerCase());
   const isUnassigned = !creatorAddress || creatorAddress.toLowerCase() === zeroAddress.toLowerCase();
   const isCreator = Boolean(walletAddress && creatorAddress && !isUnassigned && walletAddress.toLowerCase() === creatorAddress.toLowerCase());
   const requiredAllowance = parseUsdc(String(total));
@@ -485,6 +533,19 @@ export default function ContractDetailPage() {
             {!isOwner && !isUnassigned && !application ? <span className="rounded-full bg-arc-bg px-4 py-2 text-sm font-black text-arc-muted">Creator selected</span> : null}
           </div>
         </div>
+
+        {isClient ? <ContractApplicants
+          applications={receivedApplications}
+          profiles={applicantProfiles}
+          advertiser={walletAddress!}
+          selectionContractId={address ?? params.id}
+          loading={applicantsLoading}
+          error={applicantsError}
+          onSelected={(selected) => {
+            setReceivedApplications((current) => current.map((application) => application.id === selected.id ? selected : application));
+            setCreatorAddress(selected.applicant);
+          }}
+        /> : null}
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {isClient && isCreated && isUnassigned ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Select a creator before funding this escrow.</p> : canFund ? <>
