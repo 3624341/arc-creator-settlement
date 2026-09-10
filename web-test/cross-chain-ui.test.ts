@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { bridgeResultToRecord, eventToProgress } from "../lib/cross-chain-bridge";
+import { bridgeResultToRecord, eventToProgress, normalizeBridgeEstimate } from "../lib/cross-chain-bridge";
 import type { CrossChainFundingRecord } from "../lib/cross-chain-funding";
 
 const pageSource = readFileSync("app/contracts/[id]/page.tsx", "utf8");
@@ -64,4 +64,26 @@ test("successful bridge maps source and destination hashes without marking escro
   assert.equal(mapped.sourceTxHash?.startsWith("0x"), true);
   assert.equal(mapped.destinationTxHash?.startsWith("0x"), true);
   assert.equal(mapped.fundingTxHash, undefined);
+});
+
+test("bridge estimate accepts SDK gas fees returned as decimal strings", () => {
+  const normalized = normalizeBridgeEstimate({
+    token: "USDC",
+    amount: "1",
+    source: { address: record.walletAddress, chain: "Base_Sepolia" },
+    destination: { address: record.walletAddress, chain: "Arc_Testnet" },
+    fees: [{ type: "provider", token: "USDC", amount: "0.000013" }],
+    gasFees: [
+      {
+        name: "Burn",
+        token: "ETH",
+        blockchain: "Base_Sepolia",
+        fees: { gas: 21000n, gasPrice: 45000000000n, fee: "0.000000945" },
+      },
+    ],
+  } as never);
+
+  assert.equal(normalized.protocolFeeUsdc, "0.000013");
+  assert.equal(normalized.expectedDestinationUsdc, "0.999987");
+  assert.equal(normalized.gasFees[0]?.amount, "0.000000945");
 });

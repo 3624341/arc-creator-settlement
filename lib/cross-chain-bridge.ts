@@ -120,6 +120,14 @@ export function normalizeBridgeEstimate(estimate: EstimateResult): BridgeEstimat
     }
   }, 0n);
 
+  const formatGasFee = (fee: string): string => {
+    // App Kit 1.14.0 documents EstimatedGas.fee as atomic units, but its
+    // current CCTP provider returns the EVM fee after formatUnits(). Accept
+    // both representations without ever converting a decimal through JS
+    // Number arithmetic.
+    return fee.includes(".") ? fee : formatUnits(BigInt(fee), 18);
+  };
+
   return {
     amountUsdc: formatCrossChainUsdc(amountAtomic),
     protocolFeeUsdc: formatCrossChainUsdc(feeAtomic),
@@ -128,7 +136,7 @@ export function normalizeBridgeEstimate(estimate: EstimateResult): BridgeEstimat
       name: fee.name,
       token: fee.token,
       chain: String(fee.blockchain),
-      amount: fee.fees ? formatUnits(BigInt(fee.fees.fee), 18) : "확인 필요",
+      amount: fee.fees ? formatGasFee(fee.fees.fee) : "확인 필요",
     })),
   };
 }
