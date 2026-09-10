@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "./Button";
-import { resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
+import { ensureBaseSepoliaNetwork, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import {
   BASE_SEPOLIA_EXPLORER_URL,
   estimateBaseToArcBridge,
@@ -27,6 +27,7 @@ import {
   type CrossChainFundingRecord,
 } from "@/lib/cross-chain-funding";
 import type { BridgeResult } from "@circle-fin/app-kit";
+import { formatUnits } from "viem";
 
 type Props = {
   walletAddress?: string;
@@ -166,6 +167,8 @@ export function CrossChainFundingPanel(props: Props) {
       if (!props.walletAddress) throw new Error("광고주 브라우저 지갑을 연결하세요.");
       if (!amountAtomic || !amountIsEnough) throw new Error(`예상 도착 금액이 escrow 필요액(${formatCrossChainUsdc(props.requiredAmountAtomic)} USDC) 이상이어야 합니다.`);
       const provider = getStoredBrowserProvider();
+      setNotice("지갑에서 Base Sepolia 네트워크 전환을 확인하는 중입니다.");
+      await ensureBaseSepoliaNetwork(provider);
       const snapshot = await estimateBaseToArcBridge(provider, props.walletAddress as `0x${string}`, amountInput);
       setEstimate(snapshot);
       setEstimatedAmountAtomic(amountAtomic);
@@ -215,6 +218,9 @@ export function CrossChainFundingPanel(props: Props) {
       if (!props.walletAddress) throw new Error("광고주 브라우저 지갑을 연결하세요.");
       if (!amountAtomic || !amountIsEnough) throw new Error(`브리지 금액은 escrow 필요액 ${formatCrossChainUsdc(props.requiredAmountAtomic)} USDC 이상이어야 합니다.`);
       if (estimatedAmountAtomic !== amountAtomic) throw new Error("금액이 변경되었습니다. 먼저 수수료 견적을 다시 조회하세요.");
+      const provider = getStoredBrowserProvider();
+      setNotice("지갑에서 Base Sepolia 네트워크 전환을 확인하는 중입니다.");
+      await ensureBaseSepoliaNetwork(provider);
       if (sourceBalance === undefined || sourceNativeBalance === undefined) await refreshBalances();
       if (sourceBalance !== undefined && sourceBalance < amountAtomic) throw new Error("Base Sepolia USDC 잔액이 부족합니다.");
       if (sourceNativeBalance !== undefined && sourceNativeBalance === 0n) throw new Error("Base Sepolia ETH 가스가 부족합니다. 테스트 ETH를 준비하세요.");
@@ -225,7 +231,6 @@ export function CrossChainFundingPanel(props: Props) {
         : { ...newRecord(props, amountAtomic), bridgeStatus: "bridging" as const };
       persist(next);
       setProgress([]);
-      const provider = getStoredBrowserProvider();
       const result = await executeBaseToArcBridge(provider, props.walletAddress as `0x${string}`, amountInput, (event) => {
         setProgress((previous) => [...previous.filter((item) => item.name !== event.name), event]);
         const current = readCrossChainFundingRecord(undefined, { walletAddress: props.walletAddress!, escrowId: props.escrowId });
@@ -288,6 +293,7 @@ export function CrossChainFundingPanel(props: Props) {
         <div className="rounded-2xl bg-white p-4"><p className="text-xs font-bold text-arc-muted">Route</p><p className="mt-1 font-black">Base Sepolia → Arc Testnet</p></div>
         <div className="rounded-2xl bg-white p-4"><p className="text-xs font-bold text-arc-muted">Destination wallet</p><p className="mt-1 break-all text-xs font-black">{props.walletAddress ?? "Wallet not connected"}</p></div>
         <div className="rounded-2xl bg-white p-4"><p className="text-xs font-bold text-arc-muted">Base Sepolia USDC</p><p className="mt-1 font-black">{sourceBalance === undefined ? "—" : `${formatCrossChainUsdc(sourceBalance)} USDC`}</p></div>
+        <div className="rounded-2xl bg-white p-4"><p className="text-xs font-bold text-arc-muted">Base Sepolia ETH (gas)</p><p className="mt-1 font-black">{sourceNativeBalance === undefined ? "—" : `${formatUnits(sourceNativeBalance, 18)} ETH`}</p></div>
         <div className="rounded-2xl bg-white p-4"><p className="text-xs font-bold text-arc-muted">Arc USDC (verified)</p><p className="mt-1 font-black">{arcBalance === undefined ? "—" : `${formatCrossChainUsdc(arcBalance)} USDC`}</p></div>
       </div>
 
@@ -317,7 +323,7 @@ export function CrossChainFundingPanel(props: Props) {
       {record?.bridgeStatus === "awaiting-arc" && record.sourceTxHash ? <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">출발 전송은 이미 기록되었습니다. attestation/Arc 도착 처리가 지연될 수 있습니다. 새 Bridge를 다시 누르지 말고 Refresh balances로 확인하세요.</div> : null}
       {notice ? <p role="status" className="mt-4 rounded-2xl bg-white p-4 text-sm font-semibold text-arc-muted">{notice}</p> : null}
       {error ? <p role="alert" className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}
-      {!sourceBalance || sourceNativeBalance === 0n ? <p className="mt-3 text-xs font-semibold text-red-700">Base Sepolia USDC와 ETH 가스가 필요합니다. Circle 테스트넷 faucet에서 테스트 토큰을 준비하세요.</p> : null}
+      {!sourceBalance || sourceNativeBalance === 0n ? <p className="mt-3 text-xs font-semibold text-red-700">Base Sepolia USDC와 ETH 가스가 필요합니다. Base Sepolia 네트워크의 브라우저 지갑 주소로 테스트 토큰을 준비하세요.</p> : null}
     </div>
   );
 }

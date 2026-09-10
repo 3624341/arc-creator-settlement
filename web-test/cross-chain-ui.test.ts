@@ -31,6 +31,9 @@ test("contract detail exposes a separate Base-to-Arc funding entry point", () =>
   assert.match(pageSource, /fundingTxHash/);
   assert.match(panelSource, /Testnet only/);
   assert.match(panelSource, /Base Sepolia → Arc Testnet/);
+  assert.match(panelSource, /ensureBaseSepoliaNetwork/);
+  assert.match(panelSource, /await ensureBaseSepoliaNetwork\(provider\)/);
+  assert.match(panelSource, /Base Sepolia ETH \(gas\)/);
   assert.match(panelSource, /do not start a duplicate bridge/i);
 });
 
