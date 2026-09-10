@@ -5,11 +5,17 @@ import {
   getApplicationForWallet,
   getApplications,
   getContractsForWallet,
+  getHiddenContractsForWallet,
+  getSavedContractsForWallet,
   hideContractForWallet,
   isContractHidden,
+  isContractSaved,
   isWalletCreator,
   isWalletOwner,
+  restoreContractForWallet,
   saveApplication,
+  saveContractForWallet,
+  unsaveContractForWallet,
   type JobApplication,
   type LocalContract,
   type StorageLike
@@ -122,6 +128,40 @@ test("hides an onchain contract for one wallet without deleting its record", () 
   assert.equal(isContractHidden(advertiser, onchain, storage), true);
   assert.equal(isContractHidden(applicant, onchain, storage), false);
   assert.deepEqual(getContractsForWallet(advertiser, storage), [onchain]);
+});
+
+test("restores hidden contracts and returns them from the archive list", () => {
+  const storage = new MemoryStorage();
+  const onchain = { ...contract, id: "0x1111111111111111111111111111111111111111", escrowAddress: "0x1111111111111111111111111111111111111111" };
+
+  hideContractForWallet(advertiser, onchain, storage);
+  assert.deepEqual(getHiddenContractsForWallet(advertiser, [onchain], storage), [onchain]);
+  assert.equal(restoreContractForWallet(advertiser.toLowerCase(), onchain, storage), true);
+  assert.deepEqual(getHiddenContractsForWallet(advertiser, [onchain], storage), []);
+});
+
+test("saves and unsaves jobs per wallet without affecting another wallet", () => {
+  const storage = new MemoryStorage();
+
+  assert.equal(saveContractForWallet(advertiser, contract, storage), true);
+  assert.equal(isContractSaved(advertiser.toLowerCase(), contract, storage), true);
+  assert.deepEqual(getSavedContractsForWallet(advertiser, [contract], storage), [contract]);
+  assert.deepEqual(getSavedContractsForWallet(applicant, [contract], storage), []);
+  assert.equal(unsaveContractForWallet(advertiser, contract, storage), true);
+  assert.equal(isContractSaved(advertiser, contract, storage), false);
+});
+
+test("saved and hidden preference helpers ignore malformed storage and support escrow aliases", () => {
+  const storage = new MemoryStorage();
+  storage.setItem("arc-hidden-contracts", "not-json");
+  storage.setItem("arc-saved-contracts", JSON.stringify([
+    `${advertiser.toLowerCase()}:0xabcdef0000000000000000000000000000000001`,
+    "bad"
+  ]));
+  const alias = { ...contract, id: "local-id", escrowAddress: "0xABCDEF0000000000000000000000000000000001" };
+
+  assert.deepEqual(getHiddenContractsForWallet(advertiser, [alias], storage), []);
+  assert.deepEqual(getSavedContractsForWallet(advertiser, [alias], storage), [alias]);
 });
 
 test("restores an application for the connected wallet across contract id aliases", () => {

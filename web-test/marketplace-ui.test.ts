@@ -71,3 +71,27 @@ test("shared applications can be selected only after onchain creator assignment"
   assert.match(remoteSource, /selectRemoteApplication/);
   assert.match(selectionSource, /Select creator/);
 });
+
+test("dashboard filters wallet-hidden contracts and cards expose saved-job controls", () => {
+  const dashboardSource = readFileSync(new URL("../app/dashboard/page.tsx", import.meta.url), "utf8");
+  const cardSource = readFileSync(new URL("../components/ContractCard.tsx", import.meta.url), "utf8");
+
+  assert.match(dashboardSource, /isContractHidden/);
+  assert.match(dashboardSource, /getCircleSession/);
+  assert.match(dashboardSource, /arc-browser-wallet/);
+  assert.match(cardSource, /isContractSaved/);
+  assert.match(cardSource, /saveContractForWallet/);
+  assert.match(cardSource, /unsaveContractForWallet/);
+  assert.match(cardSource, /aria-pressed/);
+  assert.match(cardSource, /Save job/);
+});
+
+test("my page exposes archived restore and saved job sections", () => {
+  assert.match(profileSource, /Archived Jobs/);
+  assert.match(profileSource, /Restore/);
+  assert.match(profileSource, /Saved Jobs/);
+  assert.match(profileSource, /getHiddenContractsForWallet/);
+  assert.match(profileSource, /restoreContractForWallet/);
+  assert.match(profileSource, /getSavedContractsForWallet/);
+  assert.match(profileSource, /unsaveContractForWallet/);
+});

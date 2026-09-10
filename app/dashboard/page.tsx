@@ -7,9 +7,22 @@ import { ContractCard, LocalContract } from "@/components/ContractCard";
 import { RecentReceipts } from "@/components/RecentReceipts";
 import { loadPublicMarketplaceContracts, mergeMarketplaceContracts, sumEscrowBalances } from "@/lib/marketplace-chain";
 import { formatUsdcExact } from "@/lib/format";
+import { getCircleSession } from "@/lib/circle-wallet-client";
+import { isContractHidden } from "@/lib/marketplace-store";
+
+const WALLET_KEY = "arc-browser-wallet";
+
+function getActiveWallet() {
+  const circle = getCircleSession();
+  if (circle?.address) return circle.address;
+  const saved = localStorage.getItem(WALLET_KEY);
+  if (!saved) return "";
+  try { return (JSON.parse(saved) as { address?: string }).address ?? ""; } catch { return ""; }
+}
 
 export default function DashboardPage() {
   const [contracts, setContracts] = useState<LocalContract[]>([]);
+  const [wallet, setWallet] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string>();
   const [stale, setStale] = useState(false);
@@ -17,6 +30,8 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
     async function loadContracts() {
+      const activeWallet = getActiveWallet();
+      if (!cancelled) setWallet(activeWallet);
       let localContracts: LocalContract[] = [];
       try {
         const raw = localStorage.getItem("arc-settlement-contracts");
@@ -26,17 +41,21 @@ export default function DashboardPage() {
         localContracts = [];
       }
 
-      if (localContracts.length && !cancelled) setContracts(localContracts);
+      const visibleLocalContracts = activeWallet
+        ? localContracts.filter((contract) => !isContractHidden(activeWallet, contract))
+        : localContracts;
+      if (visibleLocalContracts.length && !cancelled) setContracts(visibleLocalContracts);
       try {
         const publicContracts = await loadPublicMarketplaceContracts();
         if (!cancelled) {
-          setContracts(mergeMarketplaceContracts(publicContracts, localContracts));
+          const merged = mergeMarketplaceContracts(publicContracts, localContracts);
+          setContracts(activeWallet ? merged.filter((contract) => !isContractHidden(activeWallet, contract)) : merged);
           setLoadError(undefined);
           setStale(false);
         }
       } catch (error) {
         if (!cancelled) {
-          setStale(localContracts.length > 0);
+          setStale(visibleLocalContracts.length > 0);
           setLoadError(error instanceof Error ? "Arc public data is temporarily unavailable. Retry to refresh." : "Arc public data is temporarily unavailable. Retry to refresh.");
         }
       } finally {
@@ -65,7 +84,7 @@ export default function DashboardPage() {
         <StatCard label="Network" value="Arc" caption="Testnet MVP" />
       </section>
       <section className="mt-8 grid gap-5 md:grid-cols-2">
-        {contracts.map((contract) => <ContractCard key={contract.id} contract={contract} />)}
+        {contracts.map((contract) => <ContractCard key={contract.id} contract={contract} wallet={wallet} />)}
       </section>
       {!loading && !loadError && contracts.length === 0 ? <section className="mt-8 rounded-3xl border border-arc-line bg-white p-8 text-center">
         <h2 className="text-2xl font-black">No public contracts yet</h2>
