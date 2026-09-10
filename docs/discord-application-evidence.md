@@ -2,6 +2,8 @@
 
 Use this as the evidence sheet for an Arc Discord/community application. Every onchain claim below is public and independently verifiable.
 
+Submission-ready application: [`docs/discord-application-2026-09-10.md`](discord-application-2026-09-10.md)
+
 ## Identity
 
 - Builder / product owner: Dongkyun Seo

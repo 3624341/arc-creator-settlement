@@ -189,5 +189,6 @@ Use [`docs/discord-application-evidence.md`](docs/discord-application-evidence.m
 - `docs/grant-application.md`
 - `docs/technical-roadmap.md`
 - `docs/submission-checklist.md`
+- `docs/discord-application-2026-09-10.md`
 - `docs/discord-application-evidence.md`
 - `Arc_Creator_Settlement_Pitch_Deck.pptx`
