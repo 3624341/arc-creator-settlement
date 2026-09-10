@@ -19,6 +19,8 @@ import { buildApplicationSigningMessage } from "@/lib/creator-profile-signing";
 import { isProfileComplete, type CreatorProfile, type CreatorVerification } from "@/lib/creator-profile";
 import { ApplicationProfilePreview } from "@/components/ApplicationProfilePreview";
 import { ContractApplicants } from "@/components/ApplicantCard";
+import { CrossChainFundingPanel } from "@/components/CrossChainFundingPanel";
+import { readCrossChainFundingRecord, writeCrossChainFundingRecord } from "@/lib/cross-chain-funding";
 import { zeroAddress } from "viem";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
@@ -56,6 +58,8 @@ export default function ContractDetailPage() {
   const [applicantProfiles, setApplicantProfiles] = useState<Record<string, RemoteCreatorProfile>>({});
   const [applicantsLoading, setApplicantsLoading] = useState(false);
   const [applicantsError, setApplicantsError] = useState<string>();
+  const [showCrossChainFunding, setShowCrossChainFunding] = useState(false);
+  const [crossChainReady, setCrossChainReady] = useState(false);
 
   function explainError(error: unknown, fallback: string) {
     const message = error instanceof Error ? error.message : fallback;
@@ -307,15 +311,17 @@ export default function ContractDetailPage() {
     return () => { cancelled = true; };
   }, [address]);
 
-  const total = useMemo(() => milestones.reduce((sum, m) => sum + Number(m.amount.replaceAll(",", "")), 0), [milestones]);
-  const paid = useMemo(() => milestones.filter((m) => m.status === "Paid").reduce((sum, m) => sum + Number(m.amount.replaceAll(",", "")), 0), [milestones]);
+  const totalAtomic = useMemo(() => milestones.reduce((sum, m) => sum + parseUsdc(m.amount), 0n), [milestones]);
+  const paidAtomic = useMemo(() => milestones.filter((m) => m.status === "Paid").reduce((sum, m) => sum + parseUsdc(m.amount), 0n), [milestones]);
+  const total = formatUsdcExact(totalAtomic);
+  const paid = formatUsdcExact(paidAtomic);
   const submitted = milestones.filter((m) => m.status === "Submitted").length;
   const paidCount = milestones.filter((m) => m.status === "Paid").length;
   const pendingCount = milestones.filter((m) => m.status === "Pending").length;
-  const progress = total > 0 ? Math.round((paid / total) * 100) : 0;
+  const progress = totalAtomic > 0n ? Number((paidAtomic * 100n) / totalAtomic) : 0;
   const isUnassigned = !creatorAddress || creatorAddress.toLowerCase() === zeroAddress.toLowerCase();
   const isCreator = Boolean(walletAddress && creatorAddress && !isUnassigned && walletAddress.toLowerCase() === creatorAddress.toLowerCase());
-  const requiredAllowance = parseUsdc(String(total));
+  const requiredAllowance = totalAtomic;
   const usdcApproved = requiredAllowance > 0n && usdcAllowance !== undefined && usdcAllowance >= requiredAllowance;
   const isCreated = escrowStatus === 0;
   const isFunded = escrowStatus === 1;
@@ -323,7 +329,7 @@ export default function ContractDetailPage() {
   const canFund = isClient && isCreated && !isUnassigned;
 
   async function refreshUsdcAllowance() {
-    if (!address || !walletAddress || total <= 0) return;
+    if (!address || !walletAddress || totalAtomic <= 0n) return;
     const allowance = await getPublicClient().readContract({
       address: ARC_USDC_ADDRESS,
       abi: erc20Abi,
@@ -335,7 +341,7 @@ export default function ContractDetailPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!address || !walletAddress || total <= 0) {
+    if (!address || !walletAddress || totalAtomic <= 0n) {
       setUsdcAllowance(undefined);
       return () => { cancelled = true; };
     }
@@ -350,7 +356,7 @@ export default function ContractDetailPage() {
       if (!cancelled) setUsdcAllowance(undefined);
     });
     return () => { cancelled = true; };
-  }, [address, walletAddress, total]);
+  }, [address, walletAddress, totalAtomic]);
 
   async function browserEscrow() {
     if (!address) throw new Error("No escrow address. Create and confirm an onchain escrow first.");
@@ -378,15 +384,15 @@ export default function ContractDetailPage() {
       if (!isCreated) throw new Error("This escrow is no longer accepting deposits.");
       if (usdcApproved) return;
       if (walletMode === "circle") {
-        await circleExec(ARC_USDC_ADDRESS, "approve(address,uint256)", [address, parseUsdc(String(total)).toString()]);
+        await circleExec(ARC_USDC_ADDRESS, "approve(address,uint256)", [address, totalAtomic.toString()]);
         await refreshUsdcAllowance();
         return;
       }
       const { walletClient, account, escrow } = await browserEscrow();
       setStatus("Approving USDC allowance...");
       const publicClient = getPublicClient();
-      const gas = await publicClient.estimateContractGas({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account });
-      const tx = await walletClient.writeContract({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, parseUsdc(String(total))], account, gas });
+      const gas = await publicClient.estimateContractGas({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, totalAtomic], account });
+      const tx = await walletClient.writeContract({ address: ARC_USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [escrow, totalAtomic], account, gas });
       setHash(tx);
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
       if (receipt.status !== "success") throw new Error("USDC approval transaction reverted on Arc.");
@@ -413,6 +419,12 @@ export default function ContractDetailPage() {
       setHash(tx);
       const receipt = await getPublicClient().waitForTransactionReceipt({ hash: tx });
       if (receipt.status !== "success") throw new Error("Deposit transaction reverted on Arc.");
+      if (walletAddress && address) {
+        const crossChain = readCrossChainFundingRecord(undefined, { walletAddress, escrowId: address });
+        if (crossChain?.bridgeStatus === "bridge-complete") {
+          writeCrossChainFundingRecord({ ...crossChain, bridgeStatus: "complete", fundingTxHash: tx, updatedAt: new Date().toISOString() });
+        }
+      }
       setEscrowStatus(1);
       setStatus("Deposit confirmed. The escrow is funded.");
     } catch (error) { setErrorMessage(explainError(error, "Deposit failed")); setStatus("Deposit failed"); }
@@ -498,14 +510,14 @@ export default function ContractDetailPage() {
         {created ? <div role="status" className="mt-4 rounded-2xl border border-arc-lime/60 bg-arc-lime/20 p-4 text-sm font-bold text-arc-ink">Contract created successfully. Review the new escrow and continue from this page.</div> : null}
         <h1 className="mt-2 text-5xl font-black tracking-tight">{title}</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Total value</p><p className="text-3xl font-black">{total.toLocaleString()} USDC</p></div>
+          <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Total value</p><p className="text-3xl font-black">{total} USDC</p></div>
           <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Escrow address</p><p className="break-all text-sm font-black">{address ?? "Waiting for deployment"}</p></div>
           <div className="rounded-3xl bg-arc-bg p-5"><p className="text-sm text-arc-muted">Network</p><p className="text-3xl font-black">Arc</p></div>
         </div>
         <div className="mt-4 rounded-3xl border border-arc-line bg-arc-ink p-5 text-white">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div><p className="text-sm text-white/60">Settlement progress</p><p className="mt-1 text-3xl font-black">{progress}% <span className="text-base font-semibold text-white/60">released</span></p></div>
-            <p className="text-sm font-bold text-white/70">{paid.toLocaleString()} / {total.toLocaleString()} USDC paid</p>
+            <p className="text-sm font-bold text-white/70">{paid} / {total} USDC paid</p>
           </div>
           <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-arc-lime transition-all" style={{ width: `${progress}%` }} /></div>
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold text-white/70"><span><b className="text-arc-lime">{paidCount}</b> Paid</span><span><b className="text-white">{submitted}</b> Submitted</span><span><b className="text-white">{pendingCount}</b> Pending</span></div>
@@ -549,8 +561,12 @@ export default function ContractDetailPage() {
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {isClient && isCreated && isUnassigned ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Select a creator before funding this escrow.</p> : canFund ? <>
-            <Button disabled={demoMode || !address || usdcApproved} onClick={approveDeposit}>{usdcApproved ? "Approved" : "Approve USDC"}</Button>
-            <Button disabled={demoMode || !address || isFunded} className="bg-arc-lime text-arc-ink" onClick={deposit}>{isFunded ? "Funded" : "Deposit to escrow"}</Button>
+            {walletMode === "browser" ? <Button type="button" disabled={demoMode || !address || !walletAddress} onClick={() => { setShowCrossChainFunding((visible) => !visible); setCrossChainReady(false); }}>{showCrossChainFunding ? "Use Arc balance directly" : "Fund from another chain"}</Button> : null}
+            {(!showCrossChainFunding || walletMode === "circle" || crossChainReady) ? <>
+              <Button disabled={demoMode || !address || usdcApproved} onClick={approveDeposit}>{usdcApproved ? "Approved" : "Approve USDC"}</Button>
+              <Button disabled={demoMode || !address || isFunded} className="bg-arc-lime text-arc-ink" onClick={deposit}>{isFunded ? "Funded" : "Deposit to escrow"}</Button>
+            </> : null}
+            {showCrossChainFunding && walletMode === "browser" && address && walletAddress ? <div className="basis-full"><CrossChainFundingPanel walletAddress={walletAddress} escrowId={address} escrowAddress={address} requiredAmountAtomic={totalAtomic} demoMode={demoMode} onBridgeReady={setCrossChainReady} /></div> : null}
           </> : isClient && isCompleted ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">This escrow is complete. No further funding actions are available.</p> : isClient && isFunded ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Escrow funded. Review submitted milestones and release approved work.</p> : <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Only the advertiser can approve or deposit.</p>}
           {isCreator && !isClient ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Creator wallet connected. Submit milestones after the advertiser funds the escrow.</p> : null}
           {!isClient && !isCreator ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Connect the advertiser or assigned creator wallet to manage this escrow.</p> : null}
