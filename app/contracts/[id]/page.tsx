@@ -21,6 +21,7 @@ import { ApplicationProfilePreview } from "@/components/ApplicationProfilePrevie
 import { ContractApplicants } from "@/components/ApplicantCard";
 import { CrossChainFundingPanel } from "@/components/CrossChainFundingPanel";
 import { readCrossChainFundingRecord, writeCrossChainFundingRecord } from "@/lib/cross-chain-funding";
+import { CROSS_CHAIN_FUNDING_ENABLED } from "@/lib/feature-flags";
 import { zeroAddress } from "viem";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
@@ -565,12 +566,13 @@ export default function ContractDetailPage() {
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {isClient && isCreated && isUnassigned ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Select a creator before funding this escrow.</p> : canFund ? <>
-            {walletMode === "browser" ? <Button type="button" disabled={demoMode || !address || !walletAddress} onClick={() => { setShowCrossChainFunding((visible) => !visible); setCrossChainReady(false); }}>{showCrossChainFunding ? "Use Arc balance directly" : "Fund from another chain"}</Button> : null}
+            {walletMode === "browser" && CROSS_CHAIN_FUNDING_ENABLED ? <Button type="button" disabled={demoMode || !address || !walletAddress} onClick={() => { setShowCrossChainFunding((visible) => !visible); setCrossChainReady(false); }}>{showCrossChainFunding ? "Use Arc balance directly" : "Fund from another chain"}</Button> : null}
+            {walletMode === "browser" && !CROSS_CHAIN_FUNDING_ENABLED ? <p role="status" className="basis-full rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Cross-chain funding is temporarily unavailable while the security review is in progress. Use the Arc balance directly or visit <Link href="/security" className="font-black text-arc-purple">Security & trust</Link>.</p> : null}
             {(!showCrossChainFunding || walletMode === "circle" || crossChainReady) ? <>
               <Button disabled={demoMode || !address || usdcApproved} onClick={approveDeposit}>{usdcApproved ? "Approved" : "Approve USDC"}</Button>
               <Button disabled={demoMode || !address || isFunded} className="bg-arc-lime text-arc-ink" onClick={deposit}>{isFunded ? "Funded" : "Deposit to escrow"}</Button>
             </> : null}
-            {showCrossChainFunding && walletMode === "browser" && address && walletAddress ? <div className="basis-full"><CrossChainFundingPanel walletAddress={walletAddress} escrowId={address} escrowAddress={address} requiredAmountAtomic={totalAtomic} demoMode={demoMode} onBridgeReady={setCrossChainReady} /></div> : null}
+            {CROSS_CHAIN_FUNDING_ENABLED && showCrossChainFunding && walletMode === "browser" && address && walletAddress ? <div className="basis-full"><CrossChainFundingPanel walletAddress={walletAddress} escrowId={address} escrowAddress={address} requiredAmountAtomic={totalAtomic} demoMode={demoMode} onBridgeReady={setCrossChainReady} /></div> : null}
           </> : isClient && isCompleted ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">This escrow is complete. No further funding actions are available.</p> : isClient && isFunded ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Escrow funded. Review submitted milestones and release approved work.</p> : <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Only the advertiser can approve or deposit.</p>}
           {isCreator && !isClient ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Creator wallet connected. Submit milestones after the advertiser funds the escrow.</p> : null}
           {!isClient && !isCreator ? <p className="rounded-2xl bg-arc-bg px-4 py-3 text-sm font-semibold text-arc-muted">Connect the advertiser or assigned creator wallet to manage this escrow.</p> : null}
