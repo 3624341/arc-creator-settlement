@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "./Button";
-import { ensureBaseSepoliaNetwork, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
+import { ensureArcNetwork, ensureBaseSepoliaNetwork, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import {
   BASE_SEPOLIA_EXPLORER_URL,
+  bridgeRetryNetwork,
   estimateBaseToArcBridge,
   executeBaseToArcBridge,
   explainBridgeError,
@@ -261,6 +262,14 @@ export function CrossChainFundingPanel(props: Props) {
     setError(undefined);
     try {
       const provider = getStoredBrowserProvider();
+      const retryNetwork = bridgeRetryNetwork(sdkResult);
+      if (retryNetwork === "destination") {
+        setNotice("지갑에서 Arc Testnet 네트워크 전환을 확인하는 중입니다. 전환이 끝나면 Arc 도착 단계만 재개합니다.");
+        await ensureArcNetwork(provider);
+      } else {
+        setNotice("지갑에서 Base Sepolia 네트워크 전환을 확인하는 중입니다.");
+        await ensureBaseSepoliaNetwork(provider);
+      }
       const result = await retryBaseToArcBridge(provider, sdkResult, (event) => setProgress((previous) => [...previous.filter((item) => item.name !== event.name), event]));
       setSdkResult(result);
       const current = readCrossChainFundingRecord(undefined, { walletAddress: props.walletAddress!, escrowId: props.escrowId });
@@ -309,8 +318,8 @@ export function CrossChainFundingPanel(props: Props) {
       </div> : null}
 
       <div className="mt-4 flex flex-wrap gap-3">
-        <Button type="button" disabled={busy || props.demoMode || !estimate || !balanceIsEnough || !amountIsEnough} onClick={() => void handleBridge()} className="bg-arc-purple">{record?.bridgeStatus === "awaiting-arc" ? "Continue bridge" : "Bridge to Arc"}</Button>
-        {sdkResult?.state === "error" && !record?.sourceTxHash ? <Button type="button" disabled={busy} onClick={() => void handleRetry()}>Retry SDK step</Button> : null}
+        <Button type="button" disabled={busy || props.demoMode || !estimate || !balanceIsEnough || !amountIsEnough || Boolean(record?.sourceTxHash)} onClick={() => void handleBridge()} className="bg-arc-purple">{record?.bridgeStatus === "awaiting-arc" ? "Continue bridge" : "Bridge to Arc"}</Button>
+        {sdkResult?.state === "error" ? <Button type="button" disabled={busy} onClick={() => void handleRetry()}>{bridgeRetryNetwork(sdkResult) === "destination" ? "Retry Arc arrival" : "Retry SDK step"}</Button> : null}
         {hasPersistedWork && record?.sourceTxHash ? <span className="rounded-full bg-white px-4 py-2 text-xs font-black text-arc-muted">Source transaction already recorded — do not start a duplicate bridge</span> : null}
       </div>
 

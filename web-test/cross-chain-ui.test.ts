@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { bridgeResultToRecord, eventToProgress, normalizeBridgeEstimate } from "../lib/cross-chain-bridge";
+import {
+  bridgeResultToRecord,
+  bridgeRetryNetwork,
+  eventToProgress,
+  explainBridgeError,
+  normalizeBridgeEstimate,
+} from "../lib/cross-chain-bridge";
 import type { CrossChainFundingRecord } from "../lib/cross-chain-funding";
 
 const pageSource = readFileSync("app/contracts/[id]/page.tsx", "utf8");
@@ -33,6 +39,8 @@ test("contract detail exposes a separate Base-to-Arc funding entry point", () =>
   assert.match(panelSource, /Base Sepolia → Arc Testnet/);
   assert.match(panelSource, /ensureBaseSepoliaNetwork/);
   assert.match(panelSource, /await ensureBaseSepoliaNetwork\(provider\)/);
+  assert.match(panelSource, /ensureArcNetwork/);
+  assert.match(panelSource, /Retry Arc arrival/);
   assert.match(panelSource, /Base Sepolia ETH \(gas\)/);
   assert.match(panelSource, /do not start a duplicate bridge/i);
 });
@@ -64,6 +72,24 @@ test("successful bridge maps source and destination hashes without marking escro
   assert.equal(mapped.sourceTxHash?.startsWith("0x"), true);
   assert.equal(mapped.destinationTxHash?.startsWith("0x"), true);
   assert.equal(mapped.fundingTxHash, undefined);
+});
+
+test("a failed Arc mint resumes on Arc instead of starting another Base transfer", () => {
+  const failedAtMint = {
+    state: "error" as const,
+    steps: [
+      { name: "approve", state: "success" as const },
+      { name: "burn", state: "success" as const, txHash: "0xsource" },
+      { name: "attestation", state: "success" as const },
+      { name: "mint", state: "error" as const },
+    ],
+  };
+
+  assert.equal(bridgeRetryNetwork(failedAtMint), "destination");
+  assert.equal(
+    explainBridgeError(new Error("Unknown transaction while executing receiveMessage on Arc Testnet")),
+    "Arc Testnet 도착 트랜잭션을 지갑에서 승인하지 못했습니다. Arc Testnet으로 전환된 지갑 팝업을 확인한 뒤 ‘Retry Arc arrival’을 눌러 도착 단계만 다시 시도하세요.",
+  );
 });
 
 test("bridge estimate accepts SDK gas fees returned as decimal strings", () => {

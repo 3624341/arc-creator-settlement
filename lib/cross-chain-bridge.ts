@@ -160,6 +160,11 @@ export function bridgeResultToRecord(
   };
 }
 
+export function bridgeRetryNetwork(result: Pick<BridgeResult, "steps">): "source" | "destination" {
+  const failedStep = result.steps.find((step) => step.state === "error");
+  return failedStep && /mint|destination|receive/i.test(failedStep.name) ? "destination" : "source";
+}
+
 export function eventToProgress(payload: unknown): BridgeProgressEvent | null {
   if (!payload || typeof payload !== "object") return null;
   const source = payload as Record<string, unknown>;
@@ -181,6 +186,9 @@ export function eventToProgress(payload: unknown): BridgeProgressEvent | null {
 export function explainBridgeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error ?? "");
   const normalized = message.toLowerCase();
+  if (normalized.includes("unknown transaction") || normalized.includes("receivemessage")) {
+    return "Arc Testnet 도착 트랜잭션을 지갑에서 승인하지 못했습니다. Arc Testnet으로 전환된 지갑 팝업을 확인한 뒤 ‘Retry Arc arrival’을 눌러 도착 단계만 다시 시도하세요.";
+  }
   if (normalized.includes("user rejected") || normalized.includes("rejected") || normalized.includes("4001")) {
     return "지갑 서명이 거절되었습니다. 전송을 다시 시작하려면 서명을 승인해야 합니다.";
   }
