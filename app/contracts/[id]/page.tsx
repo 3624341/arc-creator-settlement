@@ -528,6 +528,10 @@ export default function ContractDetailPage() {
           <button onClick={() => setWalletMode("browser")} className={`rounded-xl px-4 py-2 text-sm font-black ${walletMode === "browser" ? "bg-white shadow-sm" : "text-arc-muted"}`}>Browser Wallet</button>
           {walletMode === "circle" && !hasCircleSession ? <a href="/wallet" className="ml-auto rounded-xl px-4 py-2 text-sm font-black text-arc-purple">Set up Circle wallet →</a> : null}
         </div>
+        <div role="note" aria-label="Wallet security notice" className="mt-4 rounded-2xl border border-arc-line bg-white p-4 text-sm">
+          <p className="font-black">Wallet security notice</p>
+          <p className="mt-1 text-arc-muted">Testnet only. Creator Settlement never asks for a seed phrase, private key, recovery phrase, or wallet password. Approve only after checking the network, amount, and contract action in your wallet.</p>
+        </div>
         {demoMode ? <div className="mt-4 rounded-2xl border border-arc-lime/50 bg-arc-lime/20 p-4 text-sm font-bold text-arc-ink">Public demo mode is read-only. The milestone state and receipt below are loaded from Arc Testnet.</div> : null}
         {showApplicationPreview && creatorProfile && creatorVerification ? <div className="mt-4 rounded-3xl border border-arc-line bg-white p-5"><ApplicationProfilePreview profile={creatorProfile} verification={creatorVerification} /><div className="mt-4 flex flex-wrap gap-3"><Button type="button" onClick={handleApply}>Sign application</Button><button type="button" onClick={() => setShowApplicationPreview(false)} className="min-h-11 rounded-full border border-arc-line px-4 py-2 text-sm font-black">Cancel</button></div></div> : null}
 

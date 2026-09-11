@@ -43,6 +43,11 @@ test("contract detail exposes a separate Base-to-Arc funding entry point", () =>
   assert.match(panelSource, /Retry Arc arrival/);
   assert.match(panelSource, /Base Sepolia ETH \(gas\)/);
   assert.match(panelSource, /do not start a duplicate bridge/i);
+  assert.match(panelSource, /Wallet security notice/);
+  assert.match(panelSource, /seed phrase/);
+  assert.match(panelSource, /Add Base Sepolia to wallet/);
+  assert.match(panelSource, /Add Arc Testnet to wallet/);
+  assert.match(pageSource, /Wallet security notice/);
 });
 
 test("bridge progress events are normalized without logging provider secrets", () => {

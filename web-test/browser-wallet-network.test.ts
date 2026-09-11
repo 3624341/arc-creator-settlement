@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ensureBaseSepoliaNetwork } from "../lib/browser-wallet";
+import { addBaseSepoliaNetwork, ensureBaseSepoliaNetwork } from "../lib/browser-wallet";
 
 type Request = { method: string; params?: unknown[] };
 
@@ -27,7 +27,7 @@ test("Base Sepolia 전환은 현재 provider에 chain switch 요청을 보낸다
   ]);
 });
 
-test("Base Sepolia가 지갑에 없으면 chain add 요청으로 등록한다", async () => {
+test("Base Sepolia가 지갑에 없으면 자동 등록하지 않고 원래 오류를 전달한다", async () => {
   const requests: Request[] = [];
   const provider = providerFor(async (request) => {
     requests.push(request);
@@ -38,13 +38,16 @@ test("Base Sepolia가 지갑에 없으면 chain add 요청으로 등록한다", 
     return null;
   });
 
-  await ensureBaseSepoliaNetwork(provider);
+  const rejection = Object.assign(new Error("Unrecognized chain"), { code: 4902 });
+  await assert.rejects(ensureBaseSepoliaNetwork(provider), rejection);
 
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, 1);
   assert.deepEqual(requests[0], {
     method: "wallet_switchEthereumChain",
     params: [{ chainId: "0x14a34" }],
   });
+
+  await addBaseSepoliaNetwork(provider);
   assert.deepEqual(requests[1], {
     method: "wallet_addEthereumChain",
     params: [

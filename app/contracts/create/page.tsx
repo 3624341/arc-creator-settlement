@@ -104,7 +104,6 @@ export default function CreateContractPage() {
     const stored = JSON.parse(localStorage.getItem(BROWSER_WALLET_STORAGE) ?? "null") as { name?: BrowserWalletName } | null;
     const name = stored?.name ?? "metamask";
     const provider = resolveBrowserProvider(name);
-    await ensureArcNetwork(provider);
     const { account } = await getWalletClient(provider);
     setAccount(account);
     setBrowserWalletName(name);

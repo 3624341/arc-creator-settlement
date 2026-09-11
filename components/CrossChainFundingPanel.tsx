@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "./Button";
-import { ensureArcNetwork, ensureBaseSepoliaNetwork, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
+import { addArcNetwork, addBaseSepoliaNetwork, ensureArcNetwork, ensureBaseSepoliaNetwork, isNetworkNotAddedError, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import {
   BASE_SEPOLIA_EXPLORER_URL,
   bridgeRetryNetwork,
@@ -85,6 +85,7 @@ export function CrossChainFundingPanel(props: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
+  const [networkSetup, setNetworkSetup] = useState<"arc" | "base">();
 
   const amountAtomic = useMemo(() => {
     try {
@@ -113,6 +114,22 @@ export function CrossChainFundingPanel(props: Props) {
     setSourceBalance(usdc);
     setSourceNativeBalance(native);
     setArcBalance(arc);
+  }
+
+  async function addRequestedNetwork(network: "arc" | "base") {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const provider = getStoredBrowserProvider();
+      if (network === "arc") await addArcNetwork(provider);
+      else await addBaseSepoliaNetwork(provider);
+      setNetworkSetup(undefined);
+      setNotice(network === "arc" ? "Arc Testnet이 지갑에 추가되었습니다. 필요한 작업을 다시 시도하세요." : "Base Sepolia가 지갑에 추가되었습니다. 필요한 작업을 다시 시도하세요.");
+    } catch (caught) {
+      setError(explainBridgeError(caught));
+    } finally {
+      setBusy(false);
+    }
   }
 
   useEffect(() => {
@@ -176,6 +193,7 @@ export function CrossChainFundingPanel(props: Props) {
       setNotice("수수료 견적을 확인했습니다. 예상 도착 금액과 가스 잔액을 확인한 뒤 브리지를 실행하세요.");
       await refreshBalances();
     } catch (caught) {
+      if (isNetworkNotAddedError(caught)) setNetworkSetup("base");
       setError(explainBridgeError(caught));
     }
   }
@@ -250,6 +268,7 @@ export function CrossChainFundingPanel(props: Props) {
       setSdkResult(result);
       await completeBridge(readCrossChainFundingRecord(undefined, { walletAddress: props.walletAddress, escrowId: props.escrowId }) ?? next, result);
     } catch (caught) {
+      if (isNetworkNotAddedError(caught)) setNetworkSetup("base");
       setError(explainBridgeError(caught));
     } finally {
       setBusy(false);
@@ -276,6 +295,7 @@ export function CrossChainFundingPanel(props: Props) {
       if (!current) throw new Error("복구할 작업 상태를 찾지 못했습니다.");
       await completeBridge(current, result);
     } catch (caught) {
+      if (isNetworkNotAddedError(caught)) setNetworkSetup(bridgeRetryNetwork(sdkResult ?? { steps: [] }) === "destination" ? "arc" : "base");
       setError(explainBridgeError(caught));
     } finally {
       setBusy(false);
@@ -296,6 +316,11 @@ export function CrossChainFundingPanel(props: Props) {
           <p className="mt-1 text-sm text-arc-muted">브리지는 광고주 지갑으로 도착한 뒤, 기존 Arc escrow 예치와 별도로 실행됩니다.</p>
         </div>
         <button type="button" onClick={() => void refreshBalances().catch((caught) => setError(explainBridgeError(caught)))} className="rounded-full border border-arc-line bg-white px-3 py-2 text-xs font-black">Refresh balances</button>
+      </div>
+
+      <div role="note" aria-label="Wallet security notice" className="mt-4 rounded-2xl border border-arc-line bg-white p-4 text-sm">
+        <p className="font-black">Wallet security notice</p>
+        <p className="mt-1 text-arc-muted">Testnet only. Creator Settlement never asks for a seed phrase, private key, recovery phrase, or wallet password. Before approving, verify the network, amount, and contract action in your wallet.</p>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -322,6 +347,12 @@ export function CrossChainFundingPanel(props: Props) {
         {sdkResult?.state === "error" ? <Button type="button" disabled={busy} onClick={() => void handleRetry()}>{bridgeRetryNetwork(sdkResult) === "destination" ? "Retry Arc arrival" : "Retry SDK step"}</Button> : null}
         {hasPersistedWork && record?.sourceTxHash ? <span className="rounded-full bg-white px-4 py-2 text-xs font-black text-arc-muted">Source transaction already recorded — do not start a duplicate bridge</span> : null}
       </div>
+
+      {networkSetup ? <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+        <p className="font-black">네트워크를 먼저 지갑에 추가하세요</p>
+        <p className="mt-1">자동으로 네트워크를 추가하지 않습니다. 아래 버튼을 눌러 지갑에서 네트워크 정보를 확인하고 직접 추가한 뒤 작업을 다시 시도하세요.</p>
+        <Button type="button" disabled={busy} onClick={() => void addRequestedNetwork(networkSetup)} className="mt-3 bg-amber-200 text-amber-950">{networkSetup === "base" ? "Add Base Sepolia to wallet" : "Add Arc Testnet to wallet"}</Button>
+      </div> : null}
 
       {progress.length ? <div className="mt-4 space-y-2">{progress.map((step) => <div key={step.name} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-white px-4 py-3 text-sm"><span className="font-black">{stepLabel(step.name)}</span><span className={step.state === "error" ? "text-red-700" : step.state === "success" ? "text-green-700" : "text-arc-muted"}>{step.state}{step.explorerUrl || explorerUrlForBridgeStep(step) ? <a className="ml-2 underline" href={step.explorerUrl || explorerUrlForBridgeStep(step)} target="_blank" rel="noreferrer">Explorer</a> : null}</span></div>)}</div> : null}
 

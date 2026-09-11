@@ -30,6 +30,14 @@ const BASE_SEPOLIA_NETWORK: EvmNetwork = {
   blockExplorerUrls: ["https://sepolia.basescan.org"],
 };
 
+const ARC_NETWORK: EvmNetwork = {
+  chainId: arcTestnet.id,
+  chainName: "Arc Testnet",
+  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+  rpcUrls: [ARC_RPC_URL],
+  blockExplorerUrls: [arcTestnet.blockExplorers.default.url],
+};
+
 export function resolveBrowserProvider(name: BrowserWalletName) {
   const ethereum = window.ethereum;
   const providers = ethereum?.providers ?? (ethereum ? [ethereum] : []);
@@ -51,42 +59,47 @@ export async function getWalletClient(provider = window.ethereum) {
   return { walletClient, account };
 }
 
-async function ensureNetwork(provider: any, network: EvmNetwork) {
-  if (!provider) throw new Error("No injected wallet found. Install a browser wallet first.");
-  const chainId = `0x${network.chainId.toString(16)}`;
-  try {
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId }]
-    });
-  } catch (error: any) {
-    if (error?.code === 4902 || error?.code === "4902") {
-      await provider.request({
-        method: "wallet_addEthereumChain",
-        params: [{
-          chainId,
-          chainName: network.chainName,
-          nativeCurrency: network.nativeCurrency,
-          rpcUrls: network.rpcUrls,
-          blockExplorerUrls: network.blockExplorerUrls,
-        }]
-      });
-    } else {
-      throw error;
-    }
-  }
+export function isNetworkNotAddedError(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { code?: unknown }).code;
+  return code === 4902 || code === "4902";
 }
 
-export async function ensureArcNetwork(provider = window.ethereum) {
-  return ensureNetwork(provider, {
-    chainId: arcTestnet.id,
-    chainName: "Arc Testnet",
-    nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-    rpcUrls: [ARC_RPC_URL],
-    blockExplorerUrls: [arcTestnet.blockExplorers.default.url],
+async function switchNetwork(provider: any, network: EvmNetwork) {
+  if (!provider) throw new Error("No injected wallet found. Install a browser wallet first.");
+  const chainId = `0x${network.chainId.toString(16)}`;
+  await provider.request({
+    method: "wallet_switchEthereumChain",
+    params: [{ chainId }]
   });
 }
 
+async function addNetwork(provider: any, network: EvmNetwork) {
+  if (!provider) throw new Error("No injected wallet found. Install a browser wallet first.");
+  await provider.request({
+    method: "wallet_addEthereumChain",
+    params: [{
+      chainId: `0x${network.chainId.toString(16)}`,
+      chainName: network.chainName,
+      nativeCurrency: network.nativeCurrency,
+      rpcUrls: network.rpcUrls,
+      blockExplorerUrls: network.blockExplorerUrls,
+    }]
+  });
+}
+
+export async function ensureArcNetwork(provider = window.ethereum) {
+  return switchNetwork(provider, ARC_NETWORK);
+}
+
 export async function ensureBaseSepoliaNetwork(provider = window.ethereum) {
-  return ensureNetwork(provider, BASE_SEPOLIA_NETWORK);
+  return switchNetwork(provider, BASE_SEPOLIA_NETWORK);
+}
+
+export async function addArcNetwork(provider = window.ethereum) {
+  return addNetwork(provider, ARC_NETWORK);
+}
+
+export async function addBaseSepoliaNetwork(provider = window.ethereum) {
+  return addNetwork(provider, BASE_SEPOLIA_NETWORK);
 }
