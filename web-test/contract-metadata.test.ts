@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  enrichContractDescriptions,
   mergeContractDescriptions,
   normalizeContractMetadataRows,
   type ContractMetadata
@@ -64,6 +65,22 @@ test("metadata enrichment adds only descriptions and preserves onchain fields", 
 
   assert.deepEqual(mergeContractDescriptions([contract], [metadata]), [{ ...contract, description }]);
   assert.deepEqual(mergeContractDescriptions([contract], []), [contract]);
+});
+
+test("metadata enrichment keeps Arc listings visible when metadata is unavailable", async () => {
+  const contract: LocalContract = {
+    id: escrow,
+    escrowAddress: escrow,
+    title: "Onchain title",
+    creator: advertiser,
+    advertiser,
+    totalUsdc: "25",
+    status: "Created"
+  };
+
+  assert.deepEqual(await enrichContractDescriptions([contract], async () => {
+    throw new Error("metadata offline");
+  }), [contract]);
 });
 
 function memoryBackend(existing?: typeof row): ContractMetadataBackend & { inserted: typeof row[] } {

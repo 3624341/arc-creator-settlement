@@ -22,6 +22,8 @@ import { ContractApplicants } from "@/components/ApplicantCard";
 import { CrossChainFundingPanel } from "@/components/CrossChainFundingPanel";
 import { readCrossChainFundingRecord, writeCrossChainFundingRecord } from "@/lib/cross-chain-funding";
 import { CROSS_CHAIN_FUNDING_ENABLED } from "@/lib/feature-flags";
+import { fetchContractMetadata } from "@/lib/marketplace-metadata";
+import { ContractDescriptionSection } from "@/components/ContractDescriptionSection";
 import { zeroAddress } from "viem";
 
 type Milestone = { description: string; amount: string; status: "Pending" | "Submitted" | "Paid" };
@@ -33,8 +35,10 @@ export default function ContractDetailPage() {
   const searchParams = useSearchParams();
   const demoMode = searchParams.get("demo") === "1";
   const created = searchParams.get("created") === "1";
+  const descriptionLocalOnly = searchParams.get("description") === "local-only";
   const [address, setAddress] = useState<string>();
   const [title, setTitle] = useState("Settlement Contract");
+  const [description, setDescription] = useState<string>();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [status, setStatus] = useState("");
   const [hash, setHash] = useState<string>();
@@ -88,6 +92,7 @@ export default function ContractDetailPage() {
     }
     const found = contracts.find((c: any) => c.id === params.id || c.escrowAddress === params.id);
     if (found) setLocalContract(found);
+    if (found?.description) setDescription(found.description);
     if (useBrowserWallet || !circle?.address) {
       try {
         const browserWallet = JSON.parse(localStorage.getItem("arc-browser-wallet") ?? "null") as { name?: BrowserWalletName } | null;
@@ -104,6 +109,17 @@ export default function ContractDetailPage() {
     if (found?.title) setTitle(found.title);
     if (candidate) setAddress(candidate);
   }, [params.id]);
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    void fetchContractMetadata([address])
+      .then((metadata) => {
+        if (!cancelled && metadata[0]?.description) setDescription(metadata[0].description);
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [address]);
 
   useEffect(() => {
     function handleWalletChange(event: Event) {
@@ -534,6 +550,8 @@ export default function ContractDetailPage() {
           <p className="mt-1 text-arc-muted">Testnet only. Creator Settlement never asks for a seed phrase, private key, recovery phrase, or wallet password. Approve only after checking the network, amount, and contract action in your wallet.</p>
         </div>
         {demoMode ? <div className="mt-4 rounded-2xl border border-arc-lime/50 bg-arc-lime/20 p-4 text-sm font-bold text-arc-ink">Public demo mode is read-only. The milestone state and receipt below are loaded from Arc Testnet.</div> : null}
+        {descriptionLocalOnly ? <div role="alert" className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">The escrow was created, but its description could not be published. This browser is showing the locally saved description.</div> : null}
+        <ContractDescriptionSection description={description} />
         {showApplicationPreview && creatorProfile && creatorVerification ? <div className="mt-4 rounded-3xl border border-arc-line bg-white p-5"><ApplicationProfilePreview profile={creatorProfile} verification={creatorVerification} /><div className="mt-4 flex flex-wrap gap-3"><Button type="button" onClick={handleApply}>Sign application</Button><button type="button" onClick={() => setShowApplicationPreview(false)} className="min-h-11 rounded-full border border-arc-line px-4 py-2 text-sm font-black">Cancel</button></div></div> : null}
 
         <div className="mt-4 rounded-3xl border border-arc-line bg-white p-5">

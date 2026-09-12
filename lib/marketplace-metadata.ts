@@ -58,6 +58,21 @@ export function mergeContractDescriptions(contracts: LocalContract[], metadata: 
   });
 }
 
+export async function enrichContractDescriptions(
+  contracts: LocalContract[],
+  load: (escrowAddresses: string[]) => Promise<ContractMetadata[]> = fetchContractMetadata
+): Promise<LocalContract[]> {
+  const addresses = contracts
+    .map((contract) => contract.escrowAddress ?? contract.id)
+    .filter(isContractMetadataAddress);
+  if (addresses.length === 0) return contracts;
+  try {
+    return mergeContractDescriptions(contracts, await load(addresses));
+  } catch {
+    return contracts;
+  }
+}
+
 export async function fetchContractMetadata(escrowAddresses: string[], fetchImpl: typeof fetch = fetch): Promise<ContractMetadata[]> {
   const addresses = [...new Set(escrowAddresses.filter(isContractMetadataAddress).map((address) => address.toLowerCase()))].slice(0, 100);
   if (addresses.length === 0) return [];

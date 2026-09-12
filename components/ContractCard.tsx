@@ -42,6 +42,7 @@ export function ContractCard({ contract, wallet }: { contract: LocalContract; wa
           <span className="rounded-full bg-arc-lime px-3 py-1 text-xs font-black">{contract.status}</span>
         </div>
       </div>
+      {contract.description ? <p className="mt-4 line-clamp-2 leading-6 text-arc-muted">{contract.description}</p> : null}
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
         <div>
           <dt className="text-arc-muted">Creator</dt>

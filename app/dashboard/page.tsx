@@ -9,6 +9,7 @@ import { loadPublicMarketplaceContracts, mergeMarketplaceContracts, sumEscrowBal
 import { formatUsdcExact } from "@/lib/format";
 import { getCircleSession } from "@/lib/circle-wallet-client";
 import { isContractHidden } from "@/lib/marketplace-store";
+import { enrichContractDescriptions } from "@/lib/marketplace-metadata";
 
 const WALLET_KEY = "arc-browser-wallet";
 
@@ -49,9 +50,13 @@ export default function DashboardPage() {
         const publicContracts = await loadPublicMarketplaceContracts();
         if (!cancelled) {
           const merged = mergeMarketplaceContracts(publicContracts, localContracts);
-          setContracts(activeWallet ? merged.filter((contract) => !isContractHidden(activeWallet, contract)) : merged);
+          const visible = activeWallet ? merged.filter((contract) => !isContractHidden(activeWallet, contract)) : merged;
+          setContracts(visible);
           setLoadError(undefined);
           setStale(false);
+          void enrichContractDescriptions(visible).then((described) => {
+            if (!cancelled) setContracts(described);
+          });
         }
       } catch (error) {
         if (!cancelled) {
