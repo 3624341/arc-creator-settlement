@@ -12,6 +12,9 @@ import { validateContractDraft } from "@/lib/contract-validation";
 import { getCircleSession, requestCircleContractExecution } from "@/lib/circle-wallet-client";
 import type { LocalContract } from "@/lib/marketplace-store";
 import { getEscrowAddressFromCreatedLogs } from "@/lib/escrow-deployment";
+import { JobDescriptionField } from "@/components/JobDescriptionField";
+import { parseContractDraft, serializeContractDraft } from "@/lib/contract-draft";
+import { saveContractMetadata } from "@/lib/marketplace-metadata";
 import { zeroAddress } from "viem";
 
 const emptyMilestone = { description: "", amount: "" };
@@ -28,27 +31,27 @@ export default function CreateContractPage() {
   const [browserWalletName, setBrowserWalletName] = useState<BrowserWalletName>();
   const [hasCircleSession, setHasCircleSession] = useState(false);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [creator, setCreator] = useState("");
   const [milestones, setMilestones] = useState<MilestoneInput[]>([]);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [status, setStatus] = useState<string>("");
 
   useEffect(() => {
-    try {
-      const draft = JSON.parse(localStorage.getItem(CREATE_DRAFT_STORAGE) ?? "null") as { title?: string; creator?: string; milestones?: MilestoneInput[] } | null;
-      if (draft) {
-        setTitle(draft.title ?? "");
-        setCreator(draft.creator ?? "");
-        setMilestones(Array.isArray(draft.milestones) ? draft.milestones : []);
-      }
-    } catch { /* ignore malformed draft */ }
+    const draft = parseContractDraft(localStorage.getItem(CREATE_DRAFT_STORAGE));
+    if (draft) {
+      setTitle(draft.title);
+      setDescription(draft.description);
+      setCreator(draft.creator);
+      setMilestones(draft.milestones);
+    }
     setDraftLoaded(true);
   }, []);
 
   useEffect(() => {
     if (!draftLoaded) return;
-    localStorage.setItem(CREATE_DRAFT_STORAGE, JSON.stringify({ title, creator, milestones }));
-  }, [draftLoaded, title, creator, milestones]);
+    localStorage.setItem(CREATE_DRAFT_STORAGE, serializeContractDraft({ title, description, creator, milestones }));
+  }, [draftLoaded, title, description, creator, milestones]);
 
   useEffect(() => {
     const session = getCircleSession();
@@ -119,6 +122,7 @@ export default function CreateContractPage() {
     const contract: LocalContract = {
       id: escrowAddress ?? `pending-${Date.now()}`,
       title,
+      description: description.trim(),
       creator: creator.trim() || zeroAddress,
       advertiser: account,
       owner: account,
@@ -132,10 +136,24 @@ export default function CreateContractPage() {
     return contract;
   }
 
+  async function publishDescription(escrowAddress: string, advertiserWallet: string) {
+    try {
+      await saveContractMetadata({
+        escrowAddress,
+        advertiserWallet,
+        description: description.trim()
+      });
+      return true;
+    } catch {
+      setStatus("Escrow created, but its public description could not be published. It remains saved in this browser and can be retried later.");
+      return false;
+    }
+  }
+
   async function createOnchain() {
     try {
       if (!ESCROW_FACTORY_ADDRESS) throw new Error("Factory is not deployed yet. Circle Contracts deployment must be completed first.");
-      const validationError = validateContractDraft(title, creator, milestones);
+      const validationError = validateContractDraft(title, description, creator, milestones);
       if (validationError) throw new Error(validationError);
       const creatorAddress = (creator.trim() || zeroAddress) as `0x${string}`;
 
@@ -173,7 +191,8 @@ export default function CreateContractPage() {
         }
         saveLocal(escrowAddress);
         if (escrowAddress) {
-          router.push(`/contracts/${escrowAddress}?created=1`);
+          const descriptionPublished = await publishDescription(escrowAddress, session.address);
+          router.push(`/contracts/${escrowAddress}?created=1${descriptionPublished ? "" : "&description=local-only"}`);
           return;
         }
         setStatus(escrowAddress ? `Escrow created on Arc: ${escrowAddress}` : "Transaction approved. Arc confirmation is still indexing; check ArcScan and refresh shortly.");
@@ -215,7 +234,8 @@ export default function CreateContractPage() {
       const escrowAddress = getEscrowAddressFromCreatedLogs(createdLogs);
       if (!escrowAddress) throw new Error("Escrow is confirmed, but Arc has not indexed its address yet. Refresh and try again shortly.");
       saveLocal(escrowAddress);
-      router.push(`/contracts/${escrowAddress}?created=1&tx=${hash}`);
+      const descriptionPublished = await publishDescription(escrowAddress, account);
+      router.push(`/contracts/${escrowAddress}?created=1&tx=${hash}${descriptionPublished ? "" : "&description=local-only"}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Create escrow failed");
     }
@@ -243,6 +263,7 @@ export default function CreateContractPage() {
             <label className="grid gap-2 font-bold">Project title
               <input aria-label="Project title" required className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" value={title} onChange={(e) => setTitle(e.target.value)} />
             </label>
+            <JobDescriptionField value={description} onChange={setDescription} />
             <label className="grid gap-2 font-bold">Creator wallet <span className="text-sm font-normal text-arc-muted">(optional — select after applications arrive)</span>
               <input aria-label="Creator wallet address (optional)" className="rounded-2xl border border-arc-line bg-white px-4 py-3 font-normal" placeholder="Leave blank to select a creator later" value={creator} onChange={(e) => setCreator(e.target.value)} />
             </label>
