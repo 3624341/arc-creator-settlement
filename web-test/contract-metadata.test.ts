@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   enrichContractDescriptions,
+  fetchContractMetadata,
   mergeContractDescriptions,
   normalizeContractMetadataRows,
+  saveContractMetadata,
   type ContractMetadata
 } from "../lib/marketplace-metadata";
 import {
@@ -81,6 +83,21 @@ test("metadata enrichment keeps Arc listings visible when metadata is unavailabl
   assert.deepEqual(await enrichContractDescriptions([contract], async () => {
     throw new Error("metadata offline");
   }), [contract]);
+});
+
+test("metadata browser client accepts the camel-case API response for reads and writes", async () => {
+  const metadata: ContractMetadata = {
+    escrowAddress: escrow,
+    advertiserWallet: advertiser.toLowerCase(),
+    description,
+    createdAt: now,
+    updatedAt: now
+  };
+  const readFetch = async () => Response.json({ enabled: true, metadata: [metadata] });
+  const writeFetch = async () => Response.json({ created: true, metadata }, { status: 201 });
+
+  assert.deepEqual(await fetchContractMetadata([escrow], readFetch as typeof fetch), [metadata]);
+  assert.deepEqual(await saveContractMetadata({ escrowAddress: escrow, advertiserWallet: advertiser, description }, writeFetch as typeof fetch), metadata);
 });
 
 function memoryBackend(existing?: typeof row): ContractMetadataBackend & { inserted: typeof row[] } {

@@ -34,16 +34,20 @@ export function normalizeContractMetadataRows(value: unknown): ContractMetadata[
   for (const item of value) {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
-    if (!isContractMetadataAddress(row.escrow_address) || !isContractMetadataAddress(row.advertiser_wallet) || !isContractDescription(row.description)) continue;
-    if (typeof row.created_at !== "string" || typeof row.updated_at !== "string") continue;
-    const escrowAddress = row.escrow_address.toLowerCase();
+    const rawEscrowAddress = row.escrow_address ?? row.escrowAddress;
+    const rawAdvertiserWallet = row.advertiser_wallet ?? row.advertiserWallet;
+    const rawCreatedAt = row.created_at ?? row.createdAt;
+    const rawUpdatedAt = row.updated_at ?? row.updatedAt;
+    if (!isContractMetadataAddress(rawEscrowAddress) || !isContractMetadataAddress(rawAdvertiserWallet) || !isContractDescription(row.description)) continue;
+    if (typeof rawCreatedAt !== "string" || typeof rawUpdatedAt !== "string") continue;
+    const escrowAddress = rawEscrowAddress.toLowerCase();
     if (metadata.has(escrowAddress)) continue;
     metadata.set(escrowAddress, {
       escrowAddress,
-      advertiserWallet: row.advertiser_wallet.toLowerCase(),
+      advertiserWallet: rawAdvertiserWallet.toLowerCase(),
       description: row.description.trim(),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      createdAt: rawCreatedAt,
+      updatedAt: rawUpdatedAt
     });
   }
   return [...metadata.values()];
