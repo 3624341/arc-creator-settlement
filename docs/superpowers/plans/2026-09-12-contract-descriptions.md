@@ -192,4 +192,3 @@ Create or use a non-financial test draft to verify textarea validation and draft
 - [ ] **Step 6: Commit, integrate, push, and deploy**
 
 Commit validated changes on `codex/contract-descriptions`, integrate them into `main` without disturbing unrelated files, push `origin/main`, wait for Vercel Production to become READY, and verify `https://www.creatorsettle.com/contracts/create` plus dashboard/detail rendering.
-
