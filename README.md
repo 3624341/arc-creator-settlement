@@ -165,6 +165,14 @@ The profile API also requires the same server-only Supabase secret. Public profi
 
 The public can read confirmed receipts and application records. Only the server can write, and the server verifies Arc receipt data before every receipt upsert. If Supabase is unavailable, the UI keeps localStorage as an offline fallback for development; it will not provide cross-browser sharing.
 
+## Public contract descriptions
+
+New contracts require a 20–2,000 character job description. The escrow title, advertiser, creator, amount, status, and milestone state remain sourced from Arc; the human-readable description is stored separately in Supabase and is never treated as payment or ownership evidence.
+
+For an existing Supabase project, apply `supabase/migrations/20260912103812_contract_metadata.sql` before deploying this feature. The migration enables RLS, grants public read-only access, denies browser writes, and reserves inserts/updates/deletes for the server-side service role. `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY` must remain server-only and must never use a `NEXT_PUBLIC_` prefix.
+
+The server accepts a new description only after reading the deployed Arc escrow and confirming that its onchain `client` matches the submitted advertiser wallet. Dashboard and detail requests load metadata on a best-effort basis: a Supabase outage cannot hide a valid Arc listing, and older contracts without metadata show a neutral no-description state. If metadata publishing fails after escrow creation, the onchain creation remains successful and the same browser retains a local fallback.
+
 ### Creator selection flow
 
 Creator assignment is optional when a job is created:

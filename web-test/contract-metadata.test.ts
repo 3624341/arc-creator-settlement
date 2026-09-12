@@ -11,7 +11,7 @@ import {
   listContractMetadata,
   type ContractMetadataBackend
 } from "../lib/marketplace-metadata-store";
-import { createMetadataRouteHandlers } from "../app/api/contracts/metadata/route";
+import { createMetadataRouteHandlers } from "../lib/marketplace-metadata-route";
 import type { LocalContract } from "../lib/marketplace-store";
 
 const escrow = "0x1111111111111111111111111111111111111111";
