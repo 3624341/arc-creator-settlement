@@ -49,6 +49,11 @@ test("reviewer demo distinguishes recorded stages from verified Arc evidence", (
   assert.match(html, /ArcScan/);
   assert.match(html, /Testnet engineering extension/);
   assert.doesNotMatch(html, /Bridge to Arc/);
+  assert.equal((html.match(/Recorded product step<\/p>/g) ?? []).length, 5);
+  assert.match(html, /dateTime="2026-09-01T00:00:00.000Z"/);
+  assert.match(html, />0x2000000000000000000000000000000000000000<\/dd>/);
+  assert.match(html, />0x3000000000000000000000000000000000000000<\/dd>/);
+  assert.match(html, />0x1000000000000000000000000000000000000000<\/dd>/);
 });
 
 test("Korean reviewer demo clearly states that no wallet connection is required", () => {
@@ -63,6 +68,8 @@ test("Korean reviewer demo clearly states that no wallet connection is required"
 
   assert.match(html, /지갑 연결 불필요/);
   assert.match(html, /Arc 테스트넷 검증 완료/);
+  assert.match(html, /lang="ko"/);
+  assert.match(html, /소스 코드, 컨트랙트, 테스트와 구현 이력을 확인하세요/);
 });
 
 test("unavailable verification renders safe guidance without a verified badge", () => {
@@ -76,4 +83,16 @@ test("unavailable verification renders safe guidance without a verified badge", 
   assert.match(html, /Arc is temporarily unavailable/);
   assert.match(html, /Verification unavailable/);
   assert.doesNotMatch(html, /Verified on Arc Testnet/);
+});
+
+test("Korean verification outage guidance is localized", () => {
+  const view: ReviewerDemoView = {
+    locale: "ko",
+    copy: getReviewerDemoCopy("ko"),
+    verification: { status: "unavailable", code: "RPC_UNAVAILABLE" }
+  };
+  const html = renderToStaticMarkup(<ReviewerDemo view={view} />);
+
+  assert.match(html, /Arc 연결이 일시적으로 원활하지 않습니다/);
+  assert.doesNotMatch(html, /Arc is temporarily unavailable/);
 });

@@ -4,6 +4,7 @@ import {
   formatUnits,
   getAddress,
   http,
+  TransactionReceiptNotFoundError,
   type Address,
   type Hex
 } from "viem";
@@ -104,7 +105,10 @@ export async function loadSettlementReceipt(
   try {
     transaction = await source.getTransactionReceipt(hash);
   } catch (cause) {
-    throw new ReceiptError("TRANSACTION_NOT_FOUND", { cause });
+    const code = cause instanceof TransactionReceiptNotFoundError
+      ? "TRANSACTION_NOT_FOUND"
+      : "RPC_UNAVAILABLE";
+    throw new ReceiptError(code, { cause });
   }
 
   if (transaction.status !== "success") {

@@ -30,16 +30,18 @@ test("reviewer demo has public entry points and an isolated route", () => {
   const shell = readFileSync(new URL("../components/Shell.tsx", import.meta.url), "utf8");
   const route = readFileSync(new URL("../app/demo/page.tsx", import.meta.url), "utf8");
   const publicShell = readFileSync(new URL("../components/PublicDemoShell.tsx", import.meta.url), "utf8");
+  const reviewerDemo = readFileSync(new URL("../components/ReviewerDemo.tsx", import.meta.url), "utf8");
 
   assert.match(home, /href="\/demo"/);
   assert.match(home, /View 90-second demo/);
   assert.match(shell, /Reviewer Demo/);
   assert.match(route, /loadReviewerDemo/);
   assert.match(route, /PublicDemoShell/);
+  assert.match(route, /live Arc Testnet verification when available/);
   assert.doesNotMatch(route, /@\/components\/Shell/);
   assert.doesNotMatch(
-    route + publicShell,
-    /browser-wallet|circle-wallet-client|eth_accounts|personal_sign|wallet_addEthereumChain/
+    route + publicShell + reviewerDemo,
+    /browser-wallet|circle-wallet-client|window\.ethereum|eth_accounts|eth_requestAccounts|personal_sign|wallet_addEthereumChain|wallet_switchEthereumChain|sendTransaction/
   );
 });
 

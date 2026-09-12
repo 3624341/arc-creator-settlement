@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "90-second reviewer demo · Arc Creator Settlement",
-  description: "A wallet-free, read-only walkthrough with verified Arc Testnet payment evidence."
+  description: "A wallet-free, read-only walkthrough with live Arc Testnet verification when available."
 };
 
 type DemoPageProps = {

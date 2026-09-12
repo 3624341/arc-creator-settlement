@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, CheckCircle2, CircleDot, Code2, FileSearch, ShieldCheck } from "lucide-react";
-import { receiptErrorView, shortAddress } from "@/lib/receipts/presentation";
-import type { ReviewerDemoView } from "@/lib/reviewer-demo";
+import { reviewerDemoErrorView, type ReviewerDemoView } from "@/lib/reviewer-demo";
 
 const resources = {
   github: "https://github.com/3624341/arc-creator-settlement",
@@ -29,6 +28,13 @@ function ExternalResource({ href, title, body }: { href: string; title: string; 
 
 export function ReviewerDemo({ view }: { view: ReviewerDemoView }) {
   const { copy, verification } = view;
+  const confirmedAt = verification.status === "verified"
+    ? new Intl.DateTimeFormat(view.locale === "ko" ? "ko-KR" : "en", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "UTC"
+      }).format(new Date(verification.receipt.confirmedAt))
+    : undefined;
 
   return (
     <article className="py-8 sm:py-12">
@@ -53,8 +59,8 @@ export function ReviewerDemo({ view }: { view: ReviewerDemoView }) {
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-arc-ink text-lg font-black text-white">{step.number}</span>
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-arc-purple">
-                  {step.number < 6 ? <CircleDot size={14} aria-hidden="true" /> : <ShieldCheck size={14} aria-hidden="true" />}
-                  {step.number < 6 ? copy.recordedLabel : copy.verificationHeading}
+                  {step.kind === "recorded" ? <CircleDot size={14} aria-hidden="true" /> : <ShieldCheck size={14} aria-hidden="true" />}
+                  {step.kind === "recorded" ? copy.recordedLabel : copy.verificationHeading}
                 </p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{step.title}</h2>
                 <p className="mt-2 max-w-4xl leading-7 text-arc-muted">{step.body}</p>
@@ -68,33 +74,37 @@ export function ReviewerDemo({ view }: { view: ReviewerDemoView }) {
                         </p>
                         <p className="mt-3 text-4xl font-black tracking-tight">{verification.receipt.amountUsdc} <span className="text-xl text-white/60">USDC</span></p>
                       </div>
-                      <p className="mt-3 text-sm font-bold text-white/65 sm:mt-0">Arc Testnet · Chain ID {verification.receipt.chainId}</p>
+                      <p className="mt-3 text-sm font-bold text-white/65 sm:mt-0">{copy.networkLabel}: Arc Testnet · Chain ID {verification.receipt.chainId}</p>
                     </div>
                     <div className="p-5 sm:p-6">
                       <p className="font-black">{verification.receipt.projectTitle}</p>
-                      <p className="mt-1 text-sm text-white/65">Milestone {verification.receipt.milestoneIndex + 1} · {verification.receipt.milestoneDescription}</p>
+                      <p className="mt-1 text-sm text-white/65">{copy.milestoneLabel} {verification.receipt.milestoneIndex + 1} · {verification.receipt.milestoneDescription}</p>
 
                       <details className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
                         <summary className="cursor-pointer font-bold">{copy.detailsLabel}</summary>
                         <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                           <div>
-                            <dt className="text-white/50">Recipient</dt>
-                            <dd title={verification.receipt.creatorAddress} className="mt-1 break-all font-mono font-bold">{shortAddress(verification.receipt.creatorAddress)}</dd>
+                            <dt className="text-white/50">{copy.recipientLabel}</dt>
+                            <dd className="mt-1 break-all font-mono text-xs font-bold">{verification.receipt.creatorAddress}</dd>
                           </div>
                           <div>
-                            <dt className="text-white/50">Released by</dt>
-                            <dd title={verification.receipt.clientAddress} className="mt-1 break-all font-mono font-bold">{shortAddress(verification.receipt.clientAddress)}</dd>
+                            <dt className="text-white/50">{copy.releasedByLabel}</dt>
+                            <dd className="mt-1 break-all font-mono text-xs font-bold">{verification.receipt.clientAddress}</dd>
                           </div>
                           <div>
-                            <dt className="text-white/50">Block</dt>
+                            <dt className="text-white/50">{copy.confirmedAtLabel}</dt>
+                            <dd className="mt-1 font-bold"><time dateTime={verification.receipt.confirmedAt}>{confirmedAt} UTC</time></dd>
+                          </div>
+                          <div>
+                            <dt className="text-white/50">{copy.blockLabel}</dt>
                             <dd className="mt-1 font-mono font-bold">#{verification.receipt.blockNumber}</dd>
                           </div>
                           <div>
-                            <dt className="text-white/50">Escrow</dt>
-                            <dd title={verification.receipt.escrowAddress} className="mt-1 break-all font-mono font-bold">{shortAddress(verification.receipt.escrowAddress)}</dd>
+                            <dt className="text-white/50">{copy.escrowLabel}</dt>
+                            <dd className="mt-1 break-all font-mono text-xs font-bold">{verification.receipt.escrowAddress}</dd>
                           </div>
                           <div className="sm:col-span-2">
-                            <dt className="text-white/50">Transaction</dt>
+                            <dt className="text-white/50">{copy.transactionLabel}</dt>
                             <dd className="mt-1 break-all font-mono text-xs font-bold">{verification.receipt.txHash}</dd>
                           </div>
                         </dl>
@@ -113,7 +123,7 @@ export function ReviewerDemo({ view }: { view: ReviewerDemoView }) {
                 ) : null}
 
                 {step.number === 6 && verification.status === "unavailable" ? (() => {
-                  const error = receiptErrorView(verification.code);
+                  const error = reviewerDemoErrorView(view.locale, verification.code);
                   return (
                     <section role="status" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 sm:p-6">
                       <p className="font-black text-amber-800">{copy.unavailableLabel}</p>
@@ -138,15 +148,15 @@ export function ReviewerDemo({ view }: { view: ReviewerDemoView }) {
       </section>
 
       <section className="mt-10">
-        <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-arc-purple"><FileSearch size={16} aria-hidden="true" /> Evidence</p>
+        <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-arc-purple"><FileSearch size={16} aria-hidden="true" /> {copy.evidenceLabel}</p>
         <h2 className="mt-2 text-3xl font-black tracking-tight">{copy.resourcesTitle}</h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <ExternalResource href={resources.github} title="GitHub repository" body="Inspect the source, contracts, tests, and implementation history." />
-          <ExternalResource href={resources.koreanGuide} title="Korean Arc build guide" body="Read the Korean-language guide for builders starting on Arc." />
-          <ExternalResource href={resources.builderHub} title="Arc Builder Hub" body="Explore practical resources collected for the Arc builder community." />
+          <ExternalResource href={resources.github} title={copy.resourceCards.github.title} body={copy.resourceCards.github.body} />
+          <ExternalResource href={resources.koreanGuide} title={copy.resourceCards.koreanGuide.title} body={copy.resourceCards.koreanGuide.body} />
+          <ExternalResource href={resources.builderHub} title={copy.resourceCards.builderHub.title} body={copy.resourceCards.builderHub.body} />
           <Link href={resources.security} className="group rounded-2xl border border-arc-line bg-white/80 p-5 transition hover:-translate-y-0.5 hover:border-arc-purple/40 hover:shadow-lg">
-            <span className="flex items-center justify-between gap-3 font-black">Security disclosure <ArrowUpRight size={17} className="text-arc-purple" aria-hidden="true" /></span>
-            <span className="mt-2 block text-sm leading-6 text-arc-muted">Review wallet boundaries, testnet assumptions, and safety controls.</span>
+            <span className="flex items-center justify-between gap-3 font-black">{copy.resourceCards.security.title} <ArrowUpRight size={17} className="text-arc-purple" aria-hidden="true" /></span>
+            <span className="mt-2 block text-sm leading-6 text-arc-muted">{copy.resourceCards.security.body}</span>
           </Link>
         </div>
       </section>

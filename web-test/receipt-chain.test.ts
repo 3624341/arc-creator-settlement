@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { encodeAbiParameters, encodeEventTopics } from "viem";
+import { encodeAbiParameters, encodeEventTopics, TransactionReceiptNotFoundError } from "viem";
 import { decodePaymentReleasedLog, loadSettlementReceipt, type ReceiptDataSource } from "../lib/receipts/chain";
 import { ReceiptError } from "../lib/receipts/types";
 
@@ -90,6 +90,26 @@ test("receipt loader normalizes a confirmed Arc milestone release", async () => 
     projectTitle: "Tokyo Skincare Campaign",
     explorerUrl: `https://testnet.arcscan.app/tx/${txHash}`
   });
+});
+
+test("receipt lookup distinguishes a missing transaction from an RPC transport failure", async () => {
+  await assert.rejects(
+    loadSettlementReceipt(txHash, source({
+      getTransactionReceipt: async () => {
+        throw new TransactionReceiptNotFoundError({ hash: txHash });
+      }
+    })),
+    (error: unknown) => error instanceof ReceiptError && error.code === "TRANSACTION_NOT_FOUND"
+  );
+
+  await assert.rejects(
+    loadSettlementReceipt(txHash, source({
+      getTransactionReceipt: async () => {
+        throw new Error("RPC request timed out");
+      }
+    })),
+    (error: unknown) => error instanceof ReceiptError && error.code === "RPC_UNAVAILABLE"
+  );
 });
 
 for (const [name, customSource, code] of [

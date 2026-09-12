@@ -1,4 +1,5 @@
 import { loadSettlementReceipt } from "./receipts/chain";
+import { receiptErrorView, type ReceiptErrorView } from "./receipts/presentation";
 import { ReceiptError, type ReceiptErrorCode, type SettlementReceipt } from "./receipts/types";
 
 export const REVIEWER_DEMO_RECEIPT_TX_HASH =
@@ -14,6 +15,14 @@ export type ReviewerDemoStep = {
 };
 
 export type ReviewerDemoCopy = {
+  navigation: {
+    label: string;
+    product: string;
+    demo: string;
+    security: string;
+    github: string;
+    language: string;
+  };
   eyebrow: string;
   title: string;
   introduction: string;
@@ -31,6 +40,23 @@ export type ReviewerDemoCopy = {
   crossChainTitle: string;
   crossChainBody: string;
   resourcesTitle: string;
+  evidenceLabel: string;
+  networkLabel: string;
+  milestoneLabel: string;
+  recipientLabel: string;
+  releasedByLabel: string;
+  confirmedAtLabel: string;
+  blockLabel: string;
+  escrowLabel: string;
+  transactionLabel: string;
+  resourceCards: {
+    github: { title: string; body: string };
+    koreanGuide: { title: string; body: string };
+    builderHub: { title: string; body: string };
+    security: { title: string; body: string };
+  };
+  footerEvidence: string;
+  footerProduct: string;
   testnetNotice: string;
   steps: readonly ReviewerDemoStep[];
 };
@@ -47,6 +73,14 @@ export type ReviewerDemoView = {
 
 const COPY: Record<DemoLocale, ReviewerDemoCopy> = {
   en: {
+    navigation: {
+      label: "Reviewer demo navigation",
+      product: "Product",
+      demo: "Reviewer Demo",
+      security: "Security",
+      github: "GitHub",
+      language: "Language"
+    },
     eyebrow: "Recorded Arc Testnet Demo",
     title: "See a creator agreement settle in 90 seconds.",
     introduction:
@@ -66,6 +100,23 @@ const COPY: Record<DemoLocale, ReviewerDemoCopy> = {
     crossChainBody:
       "A separate testnet prototype funds the advertiser wallet through Circle App Kit before the normal Arc escrow deposit. No bridge or wallet action runs on this reviewer page.",
     resourcesTitle: "Inspect the product and implementation",
+    evidenceLabel: "Evidence",
+    networkLabel: "Network",
+    milestoneLabel: "Milestone",
+    recipientLabel: "Recipient",
+    releasedByLabel: "Released by",
+    confirmedAtLabel: "Confirmed at",
+    blockLabel: "Block",
+    escrowLabel: "Escrow",
+    transactionLabel: "Transaction",
+    resourceCards: {
+      github: { title: "GitHub repository", body: "Inspect the source, contracts, tests, and implementation history." },
+      koreanGuide: { title: "Korean Arc build guide", body: "Read the Korean-language guide for builders starting on Arc." },
+      builderHub: { title: "Arc Builder Hub", body: "Explore practical resources collected for the Arc builder community." },
+      security: { title: "Security disclosure", body: "Review wallet boundaries, testnet assumptions, and safety controls." }
+    },
+    footerEvidence: "Read-only Arc Testnet evidence · No wallet required",
+    footerProduct: "Creator Settlement · Testnet demonstration",
     testnetNotice:
       "Testnet demonstration only. Test assets have no monetary value and this page makes no mainnet or production-usage claim.",
     steps: [
@@ -108,6 +159,14 @@ const COPY: Record<DemoLocale, ReviewerDemoCopy> = {
     ]
   },
   ko: {
+    navigation: {
+      label: "리뷰어 데모 탐색",
+      product: "제품",
+      demo: "리뷰어 데모",
+      security: "보안",
+      github: "GitHub",
+      language: "언어"
+    },
     eyebrow: "기록된 Arc 테스트넷 데모",
     title: "90초 안에 크리에이터 계약의 정산 과정을 확인하세요.",
     introduction:
@@ -127,6 +186,23 @@ const COPY: Record<DemoLocale, ReviewerDemoCopy> = {
     crossChainBody:
       "별도의 테스트넷 프로토타입이 Circle App Kit을 통해 광고주 지갑을 충전한 뒤 기존 Arc escrow 예치를 실행합니다. 이 리뷰 페이지에서는 브리지나 지갑 요청을 실행하지 않습니다.",
     resourcesTitle: "제품과 구현 확인하기",
+    evidenceLabel: "검증 자료",
+    networkLabel: "네트워크",
+    milestoneLabel: "마일스톤",
+    recipientLabel: "수령인",
+    releasedByLabel: "지급 실행자",
+    confirmedAtLabel: "확인 시각",
+    blockLabel: "블록",
+    escrowLabel: "에스크로",
+    transactionLabel: "거래",
+    resourceCards: {
+      github: { title: "GitHub 저장소", body: "소스 코드, 컨트랙트, 테스트와 구현 이력을 확인하세요." },
+      koreanGuide: { title: "한국어 Arc 빌드 가이드", body: "한국 개발자를 위한 Arc 시작 가이드를 읽어보세요." },
+      builderHub: { title: "Arc 빌더 허브", body: "Arc 빌더 커뮤니티를 위해 정리한 실용 자료를 살펴보세요." },
+      security: { title: "보안 공개 문서", body: "지갑 경계, 테스트넷 가정과 안전장치를 확인하세요." }
+    },
+    footerEvidence: "읽기 전용 Arc 테스트넷 증거 · 지갑 연결 불필요",
+    footerProduct: "Creator Settlement · 테스트넷 데모",
     testnetNotice:
       "테스트넷 데모입니다. 테스트 자산은 금전적 가치가 없으며 메인넷 또는 실제 운영 실적을 주장하지 않습니다.",
     steps: [
@@ -177,6 +253,48 @@ export function resolveDemoLocale(value?: string | string[]): DemoLocale {
 
 export function getReviewerDemoCopy(locale: DemoLocale): ReviewerDemoCopy {
   return COPY[locale];
+}
+
+const KOREAN_ERRORS: Record<ReceiptErrorCode, ReceiptErrorView> = {
+  INVALID_TRANSACTION_HASH: {
+    eyebrow: "링크 확인",
+    title: "잘못된 영수증 링크입니다",
+    body: "유효한 Arc 거래 해시가 없습니다. 정산 페이지에서 영수증 링크를 다시 복사해 주세요."
+  },
+  TRANSACTION_NOT_FOUND: {
+    eyebrow: "Arc 조회",
+    title: "거래를 찾을 수 없습니다",
+    body: "Arc가 아직 이 거래를 반환하지 않았습니다. 방금 제출했다면 잠시 후 다시 확인해 주세요."
+  },
+  TRANSACTION_REVERTED: {
+    eyebrow: "온체인 상태",
+    title: "거래가 되돌려졌습니다",
+    body: "이 거래는 완료되지 않았으므로 정산 증거로 사용할 수 없습니다."
+  },
+  PAYMENT_EVENT_NOT_FOUND: {
+    eyebrow: "영수증 확인",
+    title: "정산 영수증이 아닙니다",
+    body: "실제 거래이지만 Creator Settlement의 Arc 지급 이벤트가 포함되어 있지 않습니다."
+  },
+  PAYMENT_EVENT_AMBIGUOUS: {
+    eyebrow: "영수증 확인",
+    title: "영수증 확인이 필요합니다",
+    body: "한 거래에서 여러 지급 이벤트가 발견되어 앱이 임의로 하나를 선택하지 않습니다."
+  },
+  CONTRACT_STATE_MISMATCH: {
+    eyebrow: "검증 확인",
+    title: "영수증 검증에 실패했습니다",
+    body: "거래 이벤트와 에스크로 상태가 일치하지 않아 지급 완료로 표시하지 않습니다."
+  },
+  RPC_UNAVAILABLE: {
+    eyebrow: "네트워크 상태",
+    title: "Arc 연결이 일시적으로 원활하지 않습니다",
+    body: "공개 Arc RPC에서 검증을 완료하지 못했습니다. 거래 상태가 바뀐 것은 아니므로 잠시 후 다시 확인해 주세요."
+  }
+};
+
+export function reviewerDemoErrorView(locale: DemoLocale, code: ReceiptErrorCode): ReceiptErrorView {
+  return locale === "ko" ? KOREAN_ERRORS[code] : receiptErrorView(code);
 }
 
 export async function loadReviewerDemo(
