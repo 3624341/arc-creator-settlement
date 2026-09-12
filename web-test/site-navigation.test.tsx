@@ -41,3 +41,38 @@ test("security remains available from the site footer", async () => {
   assert.match(html, /Security &amp; Trust/);
   assert.match(html, /Creator Settlement/);
 });
+
+test("My Page remains active on profile sub-routes", async () => {
+  const { SiteNavigation } = await import("../components/SiteNavigation");
+  const html = renderToStaticMarkup(<SiteNavigation pathname="/profile/edit" />);
+  const myPageLink = html.match(/<a[^>]*>My Page<\/a>/)?.[0];
+
+  assert.ok(myPageLink);
+  assert.match(myPageLink, /href="\/profile"/);
+  assert.match(myPageLink, /aria-current="page"/);
+});
+
+test("mobile wallet controls stay outside the primary navigation landmark", async () => {
+  const navigationModule = await import("../components/SiteNavigation");
+
+  assert.equal(
+    typeof (navigationModule as { MobileNavigationPanel?: unknown }).MobileNavigationPanel,
+    "function",
+    "MobileNavigationPanel should separate product navigation from wallet controls"
+  );
+
+  const { MobileNavigationPanel } = navigationModule as {
+    MobileNavigationPanel: (props: { pathname: string; children: React.ReactNode }) => React.ReactNode;
+  };
+  const html = renderToStaticMarkup(
+    <MobileNavigationPanel pathname="/dashboard">
+      <a href="/wallet">Circle Wallet</a>
+    </MobileNavigationPanel>
+  );
+  const primaryNavigation = html.match(/<nav[^>]*aria-label="Primary navigation"[^>]*>[\s\S]*?<\/nav>/)?.[0];
+
+  assert.ok(primaryNavigation);
+  assert.doesNotMatch(primaryNavigation, /Circle Wallet|href="\/wallet"/);
+  assert.match(html, /aria-label="Wallet"/);
+  assert.match(html, /href="\/wallet">Circle Wallet<\/a>/);
+});

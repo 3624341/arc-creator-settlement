@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { getCircleSession, clearCircleSession } from "@/lib/circle-wallet-client";
 import { addArcNetwork, addBaseSepoliaNetwork, getWalletClient, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import { TESTNET_NETWORK_SETUP_ENABLED } from "@/lib/feature-flags";
-import { SiteNavigation } from "@/components/SiteNavigation";
+import { MobileNavigationPanel, SiteNavigation } from "@/components/SiteNavigation";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Wallet, Menu } from "lucide-react";
 const BROWSER_WALLET_STORAGE = "arc-browser-wallet";
@@ -97,9 +97,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           }
         }}>
           <summary className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full bg-arc-ink text-white" aria-label="Open navigation"><Menu size={19} /></summary>
-          <nav className="absolute left-4 right-4 top-[4.75rem] grid gap-2 rounded-2xl border border-arc-line bg-white p-3 text-sm font-black shadow-xl">
-            <SiteNavigation pathname={pathname} mobile />
-            <div className="mt-1 border-t border-arc-line pt-2">
+          <MobileNavigationPanel pathname={pathname}>
               <p className="px-4 py-2 text-xs font-black uppercase tracking-wider text-arc-muted">Wallet</p>
               {wallet ? <p className="px-4 py-2 text-sm font-bold text-arc-ink">{wallet.slice(0, 6)}…{wallet.slice(-4)}</p> : null}
               <button type="button" onClick={() => setBrowserWalletOpen((open) => !open)} aria-expanded={browserWalletOpen} className="w-full rounded-xl px-4 py-3 text-left font-black hover:bg-arc-bg">{wallet ? "Change browser wallet" : "Connect browser wallet"}</button>
@@ -115,8 +113,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <Link href="/wallet" className="block rounded-xl px-4 py-3 font-black hover:bg-arc-bg">Circle Wallet</Link>
               {connectError ? <p role="alert" className="mx-4 mb-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-5 text-red-700">{connectError}</p> : null}
               {wallet ? <button type="button" onClick={() => { clearCircleSession(); localStorage.removeItem(BROWSER_WALLET_STORAGE); localStorage.removeItem(WALLET_MODE_STORAGE); setWallet(undefined); setBrowserWalletOpen(false); window.dispatchEvent(new CustomEvent("arc-wallet-changed", { detail: { address: undefined, mode: "disconnected" } })); }} className="w-full rounded-xl px-4 py-3 text-left text-sm font-bold text-red-600 hover:bg-red-50">Disconnect</button> : null}
-            </div>
-          </nav>
+          </MobileNavigationPanel>
         </details>
         <div className="relative ml-auto mr-3 hidden lg:block">
           <button onClick={() => setConnectOpen((open) => !open)} className={`rounded-full px-4 py-2 text-sm font-black ${wallet ? "bg-arc-lime text-arc-ink" : "border border-arc-line bg-white"}`}>{wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "Connect Wallet"}</button>
