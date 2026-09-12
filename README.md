@@ -5,10 +5,19 @@ Programmable USDC milestone settlement for creators, freelancers, and marketplac
 ## Live verification
 
 - Live app: https://arc-creator-settlement-v0-2.vercel.app
+- Reviewer demo: `/demo`
 - GitHub: https://github.com/3624341/arc-creator-settlement
 - Korean Arc build guide: https://github.com/3624341/arc-korean-build-guide
 - Public receipt: https://arc-creator-settlement-v0-2.vercel.app/receipt/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
 - ArcScan transaction: https://testnet.arcscan.app/tx/0xdf8a7711dcbe31f07bc1f61d1492d07a0b490f45dd3b0566eaddce5deb6eb856
+
+## Reviewer Demo Mode
+
+Open `/demo` for an English-first, read-only walkthrough that requires no wallet connection. Use `/demo?lang=ko` for Korean.
+
+The contract creation, application, selection, funding, and submission cards are recorded product narrative. They explain the shipped workflow but are not presented as independent proof. The payment release card is marked verified only after the server reconstructs and validates the confirmed `PaymentReleased` event and matching escrow state through Arc RPC.
+
+If Arc RPC is temporarily unavailable, the page keeps the walkthrough visible and marks verification unavailable; it does not describe the payment as failed or verified. Reviewer Demo Mode makes no mainnet, traction, or production-usage claim.
 
 ## Verified Arc Testnet deployment
 

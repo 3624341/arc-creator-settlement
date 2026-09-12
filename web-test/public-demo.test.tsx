@@ -42,3 +42,12 @@ test("reviewer demo has public entry points and an isolated route", () => {
     /browser-wallet|circle-wallet-client|eth_accounts|personal_sign|wallet_addEthereumChain/
   );
 });
+
+test("README documents the reviewer demo trust boundary", () => {
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+
+  assert.match(readme, /Reviewer Demo Mode/);
+  assert.match(readme, /no wallet/i);
+  assert.match(readme, /recorded.*verified|verified.*recorded/is);
+  assert.match(readme, /\/demo/);
+});
