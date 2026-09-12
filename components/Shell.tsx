@@ -6,29 +6,20 @@ import { usePathname } from "next/navigation";
 import { getCircleSession, clearCircleSession } from "@/lib/circle-wallet-client";
 import { addArcNetwork, addBaseSepoliaNetwork, getWalletClient, resolveBrowserProvider, type BrowserWalletName } from "@/lib/browser-wallet";
 import { TESTNET_NETWORK_SETUP_ENABLED } from "@/lib/feature-flags";
-import { Wallet, ArrowUpRight, Menu } from "lucide-react";
-
-const navigation = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/demo", label: "Reviewer Demo" },
-  { href: "/wallet", label: "Circle Wallet" },
-  { href: "/profile", label: "My Page" },
-  { href: "/security", label: "Security" },
-];
+import { SiteNavigation } from "@/components/SiteNavigation";
+import { SiteFooter } from "@/components/SiteFooter";
+import { Wallet, Menu } from "lucide-react";
 const BROWSER_WALLET_STORAGE = "arc-browser-wallet";
 const WALLET_MODE_STORAGE = "arc-wallet-mode";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [hash, setHash] = useState("");
   const [wallet, setWallet] = useState<string>();
   const [connectOpen, setConnectOpen] = useState(false);
   const [connectError, setConnectError] = useState<string>();
   const [networkMessage, setNetworkMessage] = useState<string>();
   const [browserWalletOpen, setBrowserWalletOpen] = useState(false);
   useEffect(() => {
-    const sync = () => setHash(window.location.hash);
-    sync();
     const circle = getCircleSession();
     if (circle) setWallet(circle.address);
     const stored = localStorage.getItem(BROWSER_WALLET_STORAGE);
@@ -51,9 +42,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(BROWSER_WALLET_STORAGE);
       }
     }
-    window.addEventListener("hashchange", sync);
     return () => {
-      window.removeEventListener("hashchange", sync);
       if (provider && handleAccountsChanged) provider.removeListener?.("accountsChanged", handleAccountsChanged);
     };
   }, []);
@@ -88,7 +77,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
       setNetworkMessage(error instanceof Error ? error.message : "네트워크를 지갑에 추가하지 못했습니다.");
     }
   }
-  const active = (href: string) => href.includes("#") ? pathname === href.split("#")[0] && hash === "#receipts" : pathname === href;
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-6 py-6">
       <header className="relative z-20 mb-8 flex items-center justify-between rounded-[2rem] border border-arc-line bg-white/75 px-4 py-3 shadow-sm backdrop-blur sm:px-5 sm:py-4">
@@ -100,11 +88,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </span>
         </Link>
         <nav className="ml-5 hidden shrink-0 items-center gap-2 border-l border-arc-line pl-5 text-sm font-semibold lg:flex">
-          {navigation.map((item) => <Link key={item.href} href={item.href} className={`rounded-xl px-3 py-2 transition-colors ${active(item.href) ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>{item.label}</Link>)}
-          <Link href="/contracts/create" className={`rounded-xl px-4 py-2 transition-colors ${active("/contracts/create") ? "bg-arc-lime text-arc-ink" : "bg-arc-bg/70 text-arc-ink hover:bg-white"}`}>Create Contract</Link>
-          <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-xl px-3 py-2 hover:bg-white">
-            ArcScan <ArrowUpRight size={15} />
-          </a>
+          <SiteNavigation pathname={pathname} />
         </nav>
         <details className="group lg:hidden" onKeyDown={(event) => {
           if (event.key === "Escape") {
@@ -114,9 +98,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         }}>
           <summary className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full bg-arc-ink text-white" aria-label="Open navigation"><Menu size={19} /></summary>
           <nav className="absolute left-4 right-4 top-[4.75rem] grid gap-2 rounded-2xl border border-arc-line bg-white p-3 text-sm font-black shadow-xl">
-            {navigation.map((item) => <Link key={item.href} href={item.href} className={`rounded-xl px-4 py-3 hover:bg-arc-bg ${active(item.href) ? "bg-arc-lime text-arc-ink" : ""}`}>{item.label}</Link>)}
-            <Link href="/contracts/create" className={`rounded-xl px-4 py-3 ${active("/contracts/create") ? "bg-arc-lime text-arc-ink" : "text-arc-ink hover:bg-arc-bg"}`}>Create Contract</Link>
-            <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-xl px-4 py-3 hover:bg-arc-bg">ArcScan <ArrowUpRight size={15} /></a>
+            <SiteNavigation pathname={pathname} mobile />
             <div className="mt-1 border-t border-arc-line pt-2">
               <p className="px-4 py-2 text-xs font-black uppercase tracking-wider text-arc-muted">Wallet</p>
               {wallet ? <p className="px-4 py-2 text-sm font-bold text-arc-ink">{wallet.slice(0, 6)}…{wallet.slice(-4)}</p> : null}
@@ -142,6 +124,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       {children}
+      <SiteFooter />
     </main>
   );
 }

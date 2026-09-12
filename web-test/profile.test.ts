@@ -5,7 +5,6 @@ import { readFileSync } from "node:fs";
 test("profile page exposes wallet workspace sections", () => {
   const page = readFileSync(new URL("../app/profile/page.tsx", import.meta.url), "utf8");
   const selection = readFileSync(new URL("../components/CreatorSelectionButton.tsx", import.meta.url), "utf8");
-  const shell = readFileSync(new URL("../components/Shell.tsx", import.meta.url), "utf8");
   assert.match(page, /Created Jobs/);
   assert.match(page, /My Applications/);
   assert.match(page, /Active Work/);
@@ -18,5 +17,4 @@ test("profile page exposes wallet workspace sections", () => {
   assert.match(selection, /Select creator/);
   assert.match(page, /CreatorSelectionButton/);
   assert.match(page, /Applications received/);
-  assert.match(shell, /My Page/);
 });

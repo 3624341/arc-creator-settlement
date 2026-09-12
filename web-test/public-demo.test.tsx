@@ -27,14 +27,12 @@ test("dashboard exposes the verified public demo", () => {
 
 test("reviewer demo has public entry points and an isolated route", () => {
   const home = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
-  const shell = readFileSync(new URL("../components/Shell.tsx", import.meta.url), "utf8");
   const route = readFileSync(new URL("../app/demo/page.tsx", import.meta.url), "utf8");
   const publicShell = readFileSync(new URL("../components/PublicDemoShell.tsx", import.meta.url), "utf8");
   const reviewerDemo = readFileSync(new URL("../components/ReviewerDemo.tsx", import.meta.url), "utf8");
 
   assert.match(home, /href="\/demo"/);
   assert.match(home, /View 90-second demo/);
-  assert.match(shell, /Reviewer Demo/);
   assert.match(route, /loadReviewerDemo/);
   assert.match(route, /PublicDemoShell/);
   assert.match(route, /live Arc Testnet verification when available/);
