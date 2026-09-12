@@ -19,6 +19,9 @@ export default function Home() {
             <Link href="/contracts/create" className="inline-flex items-center gap-2 rounded-full bg-arc-ink px-6 py-4 font-black text-white shadow-sm">
               Create a contract <ArrowRight size={18} />
             </Link>
+            <Link href="/demo" className="inline-flex items-center gap-2 rounded-full bg-arc-lime px-6 py-4 font-black text-arc-ink shadow-sm">
+              View 90-second demo <ArrowRight size={18} aria-hidden="true" />
+            </Link>
             <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-4 font-black text-arc-ink shadow-sm">
               View dashboard
             </Link>

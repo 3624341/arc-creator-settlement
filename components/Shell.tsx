@@ -10,6 +10,7 @@ import { Wallet, ArrowUpRight, Menu } from "lucide-react";
 
 const navigation = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/demo", label: "Reviewer Demo" },
   { href: "/wallet", label: "Circle Wallet" },
   { href: "/profile", label: "My Page" },
   { href: "/security", label: "Security" },
