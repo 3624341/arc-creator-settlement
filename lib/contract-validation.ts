@@ -2,8 +2,10 @@ import { parseUsdc } from "./format";
 
 export type ContractDraftMilestone = { description: string; amount: string };
 
-export function validateContractDraft(title: string, creator: string, milestones: ContractDraftMilestone[]) {
+export function validateContractDraft(title: string, description: string, creator: string, milestones: ContractDraftMilestone[]) {
   if (!title.trim()) return "Enter a project title.";
+  if (description.trim().length < 20) return "Enter a job description of at least 20 characters.";
+  if (description.trim().length > 2_000) return "Keep the job description within 2,000 characters.";
   if (creator.trim() && !/^0x[a-fA-F0-9]{40}$/.test(creator.trim())) return "Enter a valid creator wallet address.";
   if (milestones.length === 0) return "Add at least one milestone.";
   if (milestones.some((milestone) => {

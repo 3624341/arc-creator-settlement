@@ -17,6 +17,7 @@ export type JobApplication = {
 export type LocalContract = {
   id: string;
   title: string;
+  description?: string;
   creator: string;
   advertiser?: string;
   owner?: string;
